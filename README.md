@@ -20,12 +20,12 @@ Nel database PostgreSQL (`data.sql`) e nell'applicazione interattiva sono già c
 
 
 ### Architettura Software e Specifiche Tecniche
-- [x] **Frontend in Angular 17**: Componenti standalone, routing modulare, RxJS, reactive updates.
-- [x] **Backend Spring Boot 3**: Architettura REST a livelli con `@RestController` e trasferimento dati in formato standard JSON.
-- [x] **Pattern DAO**: Accesso al database PostgreSQL strutturato su **9 tabelle relazionali** (`users`, `categories`, `properties`, `property_images`, `reviews`, `contact_messages`, `auctions`, `bids`, `facebook_promotions`) con query native via `JdbcTemplate`.
-- [x] **Pattern Proxy (Virtual Lazy Proxy)**: Implementato sulle relazioni 1-a-N dell'immobile (`IProperty`, `RealProperty`, `PropertyProxy`) per caricamento differito delle recensioni e delle immagini, corredato da unit test dedicato (`ProxyPatternTest.java`).
-- [x] **UI Responsive con Bootstrap 5** e **almeno 5 regole CSS personalizzate** documentate.
-- [x] **Librerie esterne e API**:
+**Frontend in Angular 17**: Componenti standalone, routing modulare, RxJS, reactive updates.
+**Backend Spring Boot 3**: Architettura REST a livelli con `@RestController` e trasferimento dati in formato standard JSON.
+**Pattern DAO**: Accesso al database PostgreSQL strutturato su **9 tabelle relazionali** (`users`, `categories`, `properties`, `property_images`, `reviews`, `contact_messages`, `auctions`, `bids`, `facebook_promotions`) con query native via `JdbcTemplate`.
+**Pattern Proxy (Virtual Lazy Proxy)**: Implementato sulle relazioni 1-a-N dell'immobile (`IProperty`, `RealProperty`, `PropertyProxy`) per caricamento differito delle recensioni e delle immagini, corredato da unit test dedicato (`ProxyPatternTest.java`).
+**UI Responsive con Bootstrap 5** e **almeno 5 regole CSS personalizzate** documentate.
+**Librerie esterne e API**:
   - **Chart.js**: Grafico a barre dei prezzi medi di mercato al mq per categoria, dinamico e aggiornato in tempo reale ad ogni nuovo annuncio o ribasso.
   - **Leaflet / Mapbox API**: Mappa geografica interattiva centrata sulle coordinate dell'immobile con token personalizzato.
   - **Facebook Graph API**: Integrazione pubblicazione social.
