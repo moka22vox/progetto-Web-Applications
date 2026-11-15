@@ -1,0 +1,247 @@
+<div class="container py-4">
+  <!-- Banner -->
+  <div class="p-4 p-md-5 mb-4 rounded-4 text-white" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+    <div class="col-md-9 px-0">
+      <h1 class="display-5 fw-bold mb-3">Trova la Casa dei Tuoi Sogni in Italia</h1>
+      <p class="lead mb-4">Esplora annunci selezionati di appartamenti, ville panoramiche, box auto e terreni edificabili con prezzi trasparenti, aste e recensioni verificate.</p>
+      
+      <!-- Filtro Tipo -->
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn px-4" 
+                [ngClass]="filter.transactionType === 'ALL' ? 'btn-light text-dark fw-bold shadow-sm' : 'btn-outline-light'" 
+                (click)="setTransactionType('ALL')">
+          Tutti gli Annunci
+        </button>
+        <button class="btn px-4" 
+                [ngClass]="filter.transactionType === 'SALE' ? 'btn-light text-dark fw-bold shadow-sm' : 'btn-outline-light'" 
+                (click)="setTransactionType('SALE')">
+          Immobili in Vendita
+        </button>
+        <button class="btn px-4" 
+                [ngClass]="filter.transactionType === 'RENT' ? 'btn-light text-dark fw-bold shadow-sm' : 'btn-outline-light'" 
+                (click)="setTransactionType('RENT')">
+          Immobili in Affitto
+        </button>
+        <button class="btn btn-warning text-dark fw-bold ms-auto" (click)="toggleChart()">
+          <i class="bi bi-graph-up me-1"></i> {{ showChart ? 'Nascondi Grafico Prezzi' : 'Mostra Grafico Prezzi' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grafico -->
+  <app-price-trends-chart *ngIf="showChart" [properties]="properties"></app-price-trends-chart>
+
+  <!-- Barra dei Filtri e Ordinamento -->
+  <div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-body p-3 p-md-4">
+      <div class="row g-3 align-items-end">
+        <!-- Tipologia -->
+        <div class="col-md-3">
+          <label class="form-label small fw-semibold text-muted">Tipologia Immobile</label>
+          <select class="form-select" [(ngModel)]="filter.categoryId" (change)="applyFilters()">
+            <option [ngValue]="0">Tutte le categorie</option>
+            <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.name }}</option>
+          </select>
+        </div>
+
+        <!-- Città -->
+        <div class="col-md-2">
+          <label class="form-label small fw-semibold text-muted">Città</label>
+          <input type="text" class="form-control" placeholder="es. Roma, Milano..." [(ngModel)]="filter.city" (keyup.enter)="applyFilters()">
+        </div>
+
+        <!-- Prezzo Massimo -->
+        <div class="col-md-2">
+          <label class="form-label small fw-semibold text-muted">Prezzo Max (€)</label>
+          <input type="number" class="form-control" placeholder="Max €" [(ngModel)]="filter.maxPrice" (change)="applyFilters()">
+        </div>
+
+        <!-- Metri Quadri Minimi -->
+        <div class="col-md-2">
+          <label class="form-label small fw-semibold text-muted">Superficie Min (mq)</label>
+          <input type="number" class="form-control" placeholder="Min mq" [(ngModel)]="filter.minSqm" (change)="applyFilters()">
+        </div>
+
+        <!-- Ordinamento -->
+        <div class="col-md-3">
+          <label class="form-label small fw-semibold text-muted">
+            <i class="bi bi-arrow-down-up text-primary me-1"></i> Ordina per
+          </label>
+          <select class="form-select fw-medium" [(ngModel)]="sortSelection" (change)="onSortChange()">
+            <option value="date_desc">Più recenti</option>
+            <option value="price_asc">Prezzo: dal più basso al più alto</option>
+            <option value="price_desc">Prezzo: dal più alto al più basso</option>
+            <option value="sqm_asc">Superficie: dal più piccolo al più grande</option>
+            <option value="sqm_desc">Superficie: dal più grande al più piccolo</option>
+            <option value="price_and_sqm_asc">Prezzo e Metri Quadri (Crescente)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Pulsanti reset e applica -->
+      <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+        <span class="text-muted small">
+          Trovati <strong>{{ properties.length }}</strong> immobili corrispondenti ai criteri
+        </span>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary btn-sm" (click)="resetFilters()">
+            <i class="bi bi-arrow-counterclockwise me-1"></i> Resetta Filtri
+          </button>
+          <button class="btn btn-primary btn-sm px-3" (click)="applyFilters()">
+            <i class="bi bi-search me-1"></i> Cerca
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Griglia Annunci -->
+  <div class="row g-4" *ngIf="properties.length > 0; else noResults">
+    <div class="col-12 col-md-6 col-lg-4" *ngFor="let p of properties">
+      <!-- REGOLA CSS PERSONALIZZATA: .realestate-card-hover -->
+      <div class="card h-100 realestate-card-hover position-relative">
+
+        <div class="auction-active-ribbon" *ngIf="p.auction">
+          <i class="bi bi-hammer"></i> ASTA ATTIVA
+        </div>
+
+        <!-- Immagine dell'immobile -->
+        <div class="position-relative overflow-hidden">
+          <img [src]="p.mainImageUrl || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80'"
+               class="card-img-top" [alt]="p.title">
+          <span class="badge position-absolute bottom-0 start-0 m-3 px-3 py-2 rounded-pill shadow-sm"
+                [ngClass]="p.transactionType === 'SALE' ? 'bg-primary' : 'bg-success'">
+            {{ p.transactionType === 'SALE' ? 'In Vendita' : 'In Affitto' }}
+          </span>
+          <span class="badge bg-dark bg-opacity-75 position-absolute bottom-0 end-0 m-3 px-2 py-1 rounded">
+            <i class="bi bi-tag me-1"></i>{{ p.categoryName }}
+          </span>
+        </div>
+
+
+        <div class="card-body d-flex flex-column p-3">
+          <div class="d-flex align-items-center text-muted small mb-2">
+            <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+            <span class="text-truncate">{{ p.address }}, {{ p.city }}</span>
+          </div>
+
+          <h6 class="card-title fw-bold text-dark text-truncate-2 mb-2" style="min-height: 48px;">
+            <a [routerLink]="['/properties', p.id]" class="text-decoration-none text-dark">
+              {{ p.title }}
+            </a>
+          </h6>
+
+          <!-- Sezione Prezzo con Ribasso -->
+          <div class="my-2 p-2 bg-light rounded-2 d-flex align-items-center justify-content-between">
+            <div>
+
+              <span *ngIf="p.hasPriceDrop" class="price-strikethrough">
+                € {{ p.originalPrice | number:'1.0-0' }}
+              </span>
+              <!-- Nuovo prezzo -->
+              <span class="fs-5 fw-bold" [ngClass]="p.hasPriceDrop ? 'text-danger' : 'text-primary'">
+                € {{ p.currentPrice | number:'1.0-0' }}
+              </span>
+              <small class="text-muted" *ngIf="p.transactionType === 'RENT'"> / mese</small>
+            </div>
+
+            <span *ngIf="p.hasPriceDrop" class="price-discount-tag">
+              <i class="bi bi-arrow-down-right"></i> SCONTO
+            </span>
+          </div>
+
+          <!-- Dettagli -->
+          <div class="row g-2 text-center text-muted small my-2 py-2 border-top border-bottom">
+            <div class="col-4 border-end">
+              <i class="bi bi-aspect-ratio text-primary d-block fs-6"></i>
+              <span>{{ p.squareMeters }} mq</span>
+            </div>
+            <div class="col-4 border-end">
+              <i class="bi bi-door-open text-primary d-block fs-6"></i>
+              <span>{{ p.rooms || 1 }} locali</span>
+            </div>
+            <div class="col-4">
+              <i class="bi bi-droplet text-primary d-block fs-6"></i>
+              <span>{{ p.bathrooms || 1 }} bagni</span>
+            </div>
+          </div>
+
+          <div class="mt-auto pt-2 d-flex gap-2">
+            <a [routerLink]="['/properties', p.id]" class="btn btn-outline-primary btn-sm flex-grow-1">
+              <i class="bi bi-eye me-1"></i> Visualizza Dettagli
+            </a>
+            <button class="btn btn-outline-success btn-sm px-3" (click)="openContactModal(p)" title="Contatta il venditore">
+              <i class="bi bi-chat-dots-fill"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noResults>
+    <div class="text-center py-5 my-5 bg-white rounded-4 shadow-sm">
+      <i class="bi bi-search text-muted display-3 mb-3 d-block"></i>
+      <h4>Nessun immobile trovato</h4>
+      <p class="text-muted">Prova a modificare i filtri di ricerca impostati.</p>
+      <button class="btn btn-primary" (click)="resetFilters()">Reimposta tutti i filtri</button>
+    </div>
+  </ng-template>
+
+  <!-- Contatto -->
+  <div class="modal fade show d-block" tabindex="-1" *ngIf="selectedPropertyForContact" style="background-color: rgba(0,0,0,0.6);">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-primary text-white rounded-top-4">
+          <h5 class="modal-title fw-bold">
+            <i class="bi bi-envelope-paper-fill me-2"></i>Contatta il Venditore
+          </h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeContactModal()"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div *ngIf="contactSuccess" class="alert alert-success d-flex align-items-center">
+            <i class="bi bi-check-circle-fill fs-4 me-2"></i>
+            <span>Il tuo messaggio è stato inviato al venditore con successo!</span>
+          </div>
+
+          <form *ngIf="!contactSuccess" (ngSubmit)="sendContactMessage()">
+            <div class="mb-3">
+              <label class="form-label small fw-bold text-muted">Oggetto del messaggio (Predefinito da Specifica)</label>
+              <input type="text" class="form-control bg-light" [(ngModel)]="contactForm.subject" name="subject" readonly>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Il tuo Nome</label>
+                <input type="text" class="form-control" [(ngModel)]="contactForm.buyerName" name="buyerName" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Telefono</label>
+                <input type="text" class="form-control" [(ngModel)]="contactForm.buyerPhone" name="buyerPhone">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-bold">La tua Email</label>
+              <input type="email" class="form-control" [(ngModel)]="contactForm.buyerEmail" name="buyerEmail" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Messaggio per il Venditore</label>
+              <textarea class="form-control" rows="4" [(ngModel)]="contactForm.message" name="message"
+                        placeholder="Buongiorno, vorrei maggiori informazioni o fissare un sopralluogo per questo immobile..." required></textarea>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-secondary" (click)="closeContactModal()">Annulla</button>
+              <button type="submit" class="btn btn-primary px-4" [disabled]="!contactForm.buyerName || !contactForm.buyerEmail || !contactForm.message">
+                <i class="bi bi-send-fill me-1"></i> Invia Messaggio
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
