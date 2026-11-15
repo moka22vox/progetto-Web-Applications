@@ -1,0 +1,2654 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portale Immobiliare - Demo Interattiva</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Leaflet CSS for Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+
+
+    /* REGOLA CSS PERSONALIZZATA 1: Evidenziazione Ribasso */
+    .price-strikethrough {
+      text-decoration: line-through;
+      text-decoration-color: #dc3545;
+      text-decoration-thickness: 2.5px;
+      color: #6c757d !important;
+      font-size: 0.95rem;
+      font-weight: 500;
+      opacity: 0.8;
+      margin-right: 0.5rem;
+      letter-spacing: -0.2px;
+    }
+
+    /* REGOLA CSS PERSONALIZZATA 2: Badge Ribasso Animato */
+    .price-discount-tag {
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+      color: #ffffff !important;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.35rem 0.65rem;
+      border-radius: 50px;
+      box-shadow: 0 2px 8px rgba(255, 65, 108, 0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      animation: pulse-glow 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-glow {
+      0% { transform: scale(1); box-shadow: 0 2px 8px rgba(255, 65, 108, 0.4); }
+      50% { transform: scale(1.04); box-shadow: 0 4px 14px rgba(255, 65, 108, 0.7); }
+      100% { transform: scale(1); box-shadow: 0 2px 8px rgba(255, 65, 108, 0.4); }
+    }
+
+    /* REGOLA CSS PERSONALIZZATA 3: Zoom SU Card */
+    .realestate-card-hover {
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                  box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                  border-color 0.28s ease;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 14px;
+      overflow: hidden;
+      background-color: #ffffff;
+    }
+
+    .realestate-card-hover:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 14px 30px rgba(13, 110, 253, 0.16) !important;
+      border-color: rgba(13, 110, 253, 0.4);
+    }
+
+    .realestate-card-hover .card-img-top {
+      transition: transform 0.45s ease;
+      height: 220px;
+      object-fit: cover;
+    }
+
+    .realestate-card-hover:hover .card-img-top {
+      transform: scale(1.05);
+    }
+
+    /* REGOLA CSS PERSONALIZZATA 4: Asta Attiva */
+    .auction-active-ribbon {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: linear-gradient(135deg, #7b2cbf, #9d4edd);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 10px rgba(123, 44, 191, 0.4);
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    /* REGOLA CSS PERSONALIZZATA 5: Controllo Visita Effettuata */
+    .verified-visitor-badge {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* REGOLA CSS PERSONALIZZATA 6: Inquadratura Mappa */
+    .custom-map-container {
+      width: 100%;
+      height: 360px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 2px solid #e9ecef;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+      position: relative;
+    }
+
+    /* Selezione Ruolo Nuovo Profilo */
+    .role-select-card {
+      border: 2px solid #dee2e6;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      background-color: #ffffff;
+      color: #495057;
+      text-align: center;
+      padding: 1rem;
+      user-select: none;
+      display: block;
+      height: 100%;
+    }
+    .role-select-card i {
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 0.35rem;
+      transition: color 0.2s ease;
+    }
+
+    .role-select-card.card-buyer i {
+      color: #198754;
+    }
+    .role-select-card.card-buyer:hover {
+      border-color: #198754;
+    }
+    .btn-check:checked + .role-select-card.card-buyer {
+      background-color: #198754 !important;
+      border-color: #198754 !important;
+      color: #ffffff !important;
+    }
+    .btn-check:checked + .role-select-card.card-buyer i,
+    .btn-check:checked + .role-select-card.card-buyer strong,
+    .btn-check:checked + .role-select-card.card-buyer span {
+      color: #ffffff !important;
+    }
+
+
+    .role-select-card.card-seller i {
+      color: #fd7e14;
+    }
+    .role-select-card.card-seller:hover {
+      border-color: #fd7e14;
+    }
+    .btn-check:checked + .role-select-card.card-seller {
+      background-color: #fd7e14 !important;
+      border-color: #fd7e14 !important;
+      color: #ffffff !important;
+    }
+    .btn-check:checked + .role-select-card.card-seller i,
+    .btn-check:checked + .role-select-card.card-seller strong,
+    .btn-check:checked + .role-select-card.card-seller span {
+      color: #ffffff !important;
+    }
+
+    /* Adattamento Responsive */
+    @media (max-width: 768px) {
+      .realestate-card-hover .card-img-top { height: 180px; }
+      .custom-map-container { height: 260px; }
+    }
+  </style>
+</head>
+<body class="bg-light">
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm py-2">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="#" onclick="showView('list')">
+        <i class="bi bi-houses-fill text-primary fs-3"></i>
+        <span>Immobili<span class="text-primary">Italia</span></span>
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" href="#" onclick="showView('list')">
+              <i class="bi bi-grid-fill me-1"></i> Tutti gli Immobili
+            </a>
+          </li>
+          <li class="nav-item" id="navSeller" style="display: none;">
+            <a class="nav-link" href="#" onclick="showView('seller')">
+              <i class="bi bi-speedometer2 me-1"></i> Dashboard Venditore
+            </a>
+          </li>
+          <li class="nav-item" id="navNewProperty" style="display: none;">
+            <a class="nav-link text-warning fw-semibold" href="#" onclick="openCreatePropertyModal()">
+              <i class="bi bi-plus-circle-fill me-1"></i> Pubblica Annuncio
+            </a>
+          </li>
+          <li class="nav-item" id="navAdmin" style="display: none;">
+            <a class="nav-link text-info fw-semibold" href="#" onclick="showView('admin')">
+              <i class="bi bi-shield-lock-fill me-1"></i> Pannello Amministratore
+            </a>
+          </li>
+        </ul>
+
+        <!-- Menu Utente -->
+        <div class="d-flex align-items-center ms-lg-auto" id="userMenuContainer">
+          <button class="btn btn-outline-light btn-sm d-flex align-items-center gap-2 px-3 py-1 shadow-sm rounded-pill" 
+                  type="button" 
+                  data-bs-toggle="offcanvas" 
+                  data-bs-target="#userRightOffcanvas" 
+                  aria-controls="userRightOffcanvas"
+                  title="Menu Utente: Accedi, Nuovo Profilo e Cambia Ruolo">
+            <i class="bi bi-person-circle fs-5 text-warning"></i>
+            <span class="fw-semibold" id="currentUserName">Ospite</span>
+            <span class="badge bg-secondary ms-1" id="currentUserBadge">NON CONNESSO</span>
+            <i class="bi bi-list fs-5 ms-1"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+
+  <div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="userRightOffcanvas" aria-labelledby="userRightOffcanvasLabel" style="width: 380px;">
+    <div class="offcanvas-header bg-dark text-white p-3 border-bottom border-secondary">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-person-gear fs-4 text-warning"></i>
+        <h5 class="offcanvas-title fw-bold mb-0" id="userRightOffcanvasLabel">Menu Utente</h5>
+      </div>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Chiudi"></button>
+    </div>
+
+    <div class="offcanvas-body p-4 d-flex flex-column gap-3">
+      <!-- Scheda Profilo Attualmente Connesso -->
+      <div class="card border-0 bg-light rounded-4 p-3 shadow-sm">
+        <div class="d-flex align-items-center gap-3">
+          <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px; font-size: 1.5rem; flex-shrink: 0;">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <div class="overflow-hidden">
+            <h6 class="fw-bold mb-0 text-dark text-truncate" id="offcanvasCurrentUserName">Nessun profilo selezionato</h6>
+            <small class="text-muted d-block text-truncate mb-1" id="offcanvasCurrentUserEmail">Accedi o seleziona un account per iniziare</small>
+            <span class="badge bg-secondary" id="offcanvasCurrentUserBadge">OSPITE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accedi e Nuovo Profilo -->
+      <div>
+        <h6 class="text-uppercase text-muted fw-bold small mb-2">
+          <i class="bi bi-shield-lock-fill me-1 text-primary"></i>Autenticazione & Profili
+        </h6>
+        <div class="d-grid gap-2">
+          <!-- Accedi -->
+          <button class="btn btn-outline-dark fw-semibold d-flex align-items-center justify-content-between p-2 px-3 rounded-3 shadow-sm" onclick="openLoginModalFromMenu()">
+            <span class="d-flex align-items-center gap-2">
+              <i class="bi bi-box-arrow-in-right text-primary fs-5"></i>
+              <span>Accedi</span>
+            </span>
+            <span class="badge bg-light text-dark border">Email & Password</span>
+          </button>
+
+          <!-- Nuovo Profilo -->
+          <button class="btn btn-primary fw-semibold d-flex align-items-center justify-content-between p-2 px-3 rounded-3 shadow-sm" onclick="openRegisterModalFromMenu()">
+            <span class="d-flex align-items-center gap-2">
+              <i class="bi bi-person-plus-fill fs-5"></i>
+              <span>Nuovo Profilo</span>
+            </span>
+            <span class="badge bg-white text-primary">Crea Account</span>
+          </button>
+
+          <!-- Disconnetti -->
+          <button class="btn btn-outline-danger btn-sm fw-semibold d-flex align-items-center justify-content-center gap-2 mt-1" id="offcanvasLogoutBtn" style="display: none;" onclick="logout()">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Disconnetti</span>
+          </button>
+        </div>
+      </div>
+
+      <hr class="my-1">
+
+      <!-- CAMBIA RUOLO -->
+      <div class="flex-grow-1">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="text-uppercase text-muted fw-bold small mb-0">
+            <i class="bi bi-arrow-repeat me-1 text-success"></i>Cambia Ruolo
+          </h6>
+        </div>
+        <p class="text-muted small mb-2">Seleziona un utente per simulare i relativi permessi:</p>
+
+        <!-- Lista Ruoli -->
+        <div class="list-group rounded-3 shadow-sm" id="usersRoleMenuList">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENITORE VISTA PRINCIPALE -->
+  <div class="container py-4">
+
+    <!-- LISTA IMMOBILI (HOME) -->
+    <div id="viewList">
+
+      <div class="p-4 p-md-5 mb-4 rounded-4 text-white shadow-sm" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+        <div class="col-md-9 px-0">
+          <h1 class="display-5 fw-bold mb-3">Trova la Tua Casa Ideale in Italia</h1>
+          <p class="lead mb-4">
+            Annunci verificati di appartamenti, ville panoramiche, box auto e terreni edificabili. Con offerte al ribasso, aste in tempo reale e recensioni di visitatori.
+          </p>
+          <div class="d-flex flex-wrap gap-2">
+            <button id="btnFilterALL" class="btn btn-light text-dark fw-bold px-4 shadow-sm" onclick="setFilterType('ALL')">Tutti</button>
+            <button id="btnFilterSALE" class="btn btn-outline-light px-4" onclick="setFilterType('SALE')">In Vendita</button>
+            <button id="btnFilterRENT" class="btn btn-outline-light px-4" onclick="setFilterType('RENT')">In Affitto</button>
+            <button id="btnToggleChart" class="btn btn-warning text-dark fw-bold ms-auto" onclick="togglePriceChart()">
+              <i class="bi bi-eye-slash-fill me-1"></i> Nascondi Grafico Prezzi
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRAFICO PREZZI -->
+      <div id="chartContainer" class="card shadow-sm border-0 mb-4 rounded-4">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="mb-0 fw-bold"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Analisi di Mercato: Prezzi Medi al mq (Vendita e Affitto)</h5>
+            <small class="text-muted">Confronto prezzi medi al mq tra Vendite (€/mq) e Affitti mensili (€/mq/mese) aggiornato in tempo reale</small>
+          </div>
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fw-semibold" id="chartPropertiesCount">
+            <i class="bi bi-bar-chart-fill me-1"></i>Analisi di mercato attiva
+          </span>
+        </div>
+        <div class="card-body p-4" style="height: 330px;">
+          <canvas id="marketChart"></canvas>
+        </div>
+      </div>
+
+      <!-- BARRA FILTRI E ORDINAMENTO -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+          <div class="row g-3 align-items-end">
+
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold text-muted">Categoria Immobile</label>
+              <select class="form-select" id="filterCategory" onchange="renderProperties()">
+                <option value="ALL">Tutte le tipologie</option>
+                <option value="Appartamenti">Appartamenti</option>
+                <option value="Ville">Ville</option>
+                <option value="Box Auto">Box Auto</option>
+                <option value="Terreni Edificabili">Terreni Edificabili</option>
+                <option value="Attici">Attici</option>
+              </select>
+            </div>
+
+            <!-- Città -->
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold text-muted">Città</label>
+              <input type="text" class="form-control" id="filterCity" placeholder="Roma, Milano..." onkeyup="renderProperties()">
+            </div>
+
+            <!-- Prezzo Max -->
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold text-muted">Prezzo Max (€)</label>
+              <input type="number" class="form-control" id="filterMaxPrice" placeholder="Max €" onchange="renderProperties()">
+            </div>
+
+            <!-- Superficie Min -->
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold text-muted">Superficie Min (mq)</label>
+              <input type="number" class="form-control" id="filterMinSqm" placeholder="Min mq" onchange="renderProperties()">
+            </div>
+
+            <!-- Requisito da Specifica: Ordinare per prezzo e/o metri quadri -->
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold text-muted">
+                <i class="bi bi-arrow-down-up text-primary me-1"></i> Ordina Risultati
+              </label>
+              <select class="form-select fw-medium" id="sortSelect" onchange="renderProperties()">
+                <option value="recent">Più recenti</option>
+                <option value="price_asc">Prezzo: dal più basso al più alto</option>
+                <option value="price_desc">Prezzo: dal più alto al più basso</option>
+                <option value="sqm_asc">Superficie: dal più piccolo al più grande</option>
+                <option value="sqm_desc">Superficie: dal più grande al più piccolo</option>
+                <option value="price_and_sqm">Prezzo e Metri Quadri (Crescente)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+            <span class="text-muted small" id="propertiesCount">Caricamento...</span>
+            <button class="btn btn-outline-secondary btn-sm" onclick="resetAllFilters()">
+              <i class="bi bi-arrow-counterclockwise me-1"></i> Resetta Tutti i Filtri
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Griglia Card Annunci -->
+      <div class="row g-4" id="propertyCardsGrid"></div>
+    </div>
+
+    <!-- DETTAGLIO IMMOBILE -->
+    <div id="viewDetail" style="display: none;">
+      <button class="btn btn-outline-secondary mb-3" onclick="showView('list')">
+        <i class="bi bi-arrow-left me-1"></i> Torna a tutti gli annunci
+      </button>
+
+      <div id="detailContent"></div>
+    </div>
+
+    <!-- DASHBOARD VENDITORE -->
+    <div id="viewSeller" style="display: none;">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+          <h2 class="fw-bold mb-1"><i class="bi bi-briefcase-fill text-warning me-2"></i>Dashboard Venditore</h2>
+          <p class="text-muted mb-0">Gestione annunci, ribasso prezzi, aste e messaggi di contatto ricevuti.</p>
+        </div>
+        <button class="btn btn-primary fw-semibold" onclick="openCreatePropertyModal()">
+          <i class="bi bi-plus-lg me-1"></i> Nuovo Annuncio
+        </button>
+      </div>
+
+      <!-- Annunci del Venditore -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white p-3 border-bottom">
+          <h5 class="fw-bold mb-0">I Miei Annunci</h5>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">Immobile</th>
+                <th>Prezzo Attuale</th>
+                <th>Superficie</th>
+                <th>Asta</th>
+                <th class="text-end pe-4">Azioni Venditore</th>
+              </tr>
+            </thead>
+            <tbody id="sellerPropertiesTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Messaggi Ricevuti  -->
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white p-3 border-bottom">
+          <h5 class="fw-bold mb-0"><i class="bi bi-envelope-open-text text-primary me-2"></i>Messaggi Ricevuti da Potenziali Acquirenti</h5>
+        </div>
+        <div class="card-body p-4" id="sellerMessagesList"></div>
+      </div>
+    </div>
+
+    <!-- PANNELLO AMMINISTRATORE -->
+    <div id="viewAdmin" style="display: none;">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+          <h2 class="fw-bold mb-1"><i class="bi bi-shield-lock-fill text-danger me-2"></i>Pannello Amministratore</h2>
+        </div>
+        <span class="badge bg-danger px-3 py-2 fs-6">Super Admin Loggato</span>
+      </div>
+
+      <!-- Tabella Utenti -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white p-3 border-bottom">
+          <h5 class="fw-bold mb-0"><i class="bi bi-people-fill text-primary me-2"></i>Gestione Utenti Registrati</h5>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">ID</th>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Ruolo</th>
+                <th>Stato Ban</th>
+                <th class="text-end pe-4">Azioni Amministratore</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tabella Moderazione Annunci -->
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white p-3 border-bottom">
+          <h5 class="fw-bold mb-0"><i class="bi bi-houses-fill text-primary me-2"></i>Moderazione Totale Annunci</h5>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">ID</th>
+                <th>Titolo</th>
+                <th>Prezzo</th>
+                <th>Città</th>
+                <th class="text-end pe-4">Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="adminPropertiesTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CONTATTA VENDITORE -->
+  <div class="modal fade" id="contactModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-primary text-white rounded-top-4">
+          <h5 class="modal-title fw-bold"><i class="bi bi-chat-dots-fill me-2"></i>Contatta il Venditore</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="contactForm" onsubmit="handleSendContact(event)">
+
+            <div class="mb-3">
+              <label class="form-label small fw-bold text-muted">Oggetto (Predefinito da Specifica)</label>
+              <input type="text" class="form-control bg-light" id="contactSubject" readonly>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Il tuo Nome</label>
+              <input type="text" class="form-control" id="contactName" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">La tua Email</label>
+              <input type="email" class="form-control" id="contactEmail" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Messaggio</label>
+              <textarea class="form-control" id="contactMessageText" rows="3" placeholder="Vorrei concordare una visita..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+              <i class="bi bi-send-fill me-1"></i> Invia al Venditore
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODIFICA PREZZO -->
+  <div class="modal fade" id="priceDropModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-warning text-dark rounded-top-4">
+          <h5 class="modal-title fw-bold"><i class="bi bi-tag-fill me-2"></i>Modifica Prezzo Annuncio</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p class="small text-muted">
+            Puoi <strong>ribassare</strong> il prezzo (il vecchio prezzo apparirà barrato con badge di sconto) oppure <strong>alzarlo</strong> in base alle condizioni di mercato.
+          </p>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Prezzo Corrente (€)</label>
+            <input type="text" class="form-control bg-light" id="currentPriceDisplay" readonly>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Nuovo Prezzo (€)</label>
+            <input type="number" class="form-control" id="newPriceInput" placeholder="Inserisci il nuovo prezzo desiderato" required>
+          </div>
+          <button type="button" class="btn btn-warning w-100 fw-bold" onclick="handlePriceDrop()">
+            Conferma Aggiornamento Prezzo
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREA ASTA -->
+  <div class="modal fade" id="createAuctionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header text-white rounded-top-4" style="background-color: #7b2cbf;">
+          <h5 class="modal-title fw-bold"><i class="bi bi-hammer me-2"></i>Avvia Asta per l'Annuncio</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Prezzo Base di Partenza (€)</label>
+            <input type="number" class="form-control" id="auctionBasePrice">
+          </div>
+          <button type="button" class="btn text-white w-100 fw-bold" style="background-color: #7b2cbf;" onclick="handleCreateAuction()">
+            Avvia Asta Pubblica
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMOZIONE FACEBOOK -->
+  <div class="modal fade" id="facebookModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-primary text-white rounded-top-4">
+          <h5 class="modal-title fw-bold"><i class="bi bi-facebook me-2"></i>Promuovi Annuncio su Facebook</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4" id="facebookModalBody">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Pagina Facebook Target</label>
+            <input type="text" class="form-control" id="fbPageName" value="RealEstate Italia - Canale Ufficiale">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Didascalia Post</label>
+            <textarea class="form-control" id="fbCaption" rows="3">🏡 Nuovo annuncio disponibile sul portale! Clicca per vedere foto complete, posizione su mappa e prezzo ribassato.</textarea>
+          </div>
+          <button type="button" class="btn btn-primary w-100 fw-bold" onclick="handleFacebookPublish()">
+            <i class="bi bi-share-fill me-1"></i> Pubblica su Facebook
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCEDI AL PROFILO -->
+  <div class="modal fade" id="loginModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-dark text-white rounded-top-4">
+          <h5 class="modal-title fw-bold"><i class="bi bi-box-arrow-in-right me-2 text-primary"></i>Accedi al tuo Profilo</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div id="loginErrorMessage" class="alert alert-danger small py-2 d-none"></div>
+
+          <!-- Credenziali Demo Rapide -->
+          <div class="mb-3 p-3 bg-light rounded-3 border">
+            <span class="small fw-bold text-muted d-block mb-2">Accesso rapido con account demo (clicca per compilare):</span>
+            <div class="d-flex flex-wrap gap-1">
+              <button type="button" class="btn btn-outline-danger btn-sm" onclick="fillQuickLogin('superadmin@realestate.it', 'admin123')">
+                👑 Lorenzo - Admin
+              </button>
+              <button type="button" class="btn btn-outline-warning text-dark btn-sm" onclick="fillQuickLogin('monica.voci@realestate.it', 'seller123')">
+                💼 Monica - Venditore
+              </button>
+              <button type="button" class="btn btn-outline-warning text-dark btn-sm" onclick="fillQuickLogin('luigi.cozza@realestate.it', 'seller123')">
+                💼 Luigi - Venditore
+              </button>
+              <button type="button" class="btn btn-outline-success btn-sm" onclick="fillQuickLogin('gennaro.guarino@email.it', 'buyer123')">
+                🛒 Gennaro - Acquirente
+              </button>
+            </div>
+          </div>
+
+          <form onsubmit="handleLoginSubmit(event)">
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Indirizzo Email</label>
+              <input type="email" class="form-control" id="loginEmail" required placeholder="name@email.it">
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label small fw-bold">Password</label>
+              <input type="password" class="form-control" id="loginPassword" required placeholder="Inserisci la password">
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+              <i class="bi bi-box-arrow-in-right me-1"></i> Accedi
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREA NUOVO PROFILO -->
+  <div class="modal fade" id="registerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-primary text-white rounded-top-4">
+          <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i>Crea Nuovo Profilo Utente</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form onsubmit="handleRegisterNewUser(event)">
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label small fw-bold">Nome</label>
+                <input type="text" class="form-control" id="regFirstName" required placeholder="Es. Mario">
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-bold">Cognome</label>
+                <input type="text" class="form-control" id="regLastName" required placeholder="Es. Rossi">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Indirizzo Email</label>
+              <input type="email" class="form-control" id="regEmail" required placeholder="mario.rossi@email.it">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Password</label>
+              <input type="password" class="form-control" id="regPassword" required placeholder="Crea una password sicura">
+            </div>
+
+            <!-- Selezione Ruolo -->
+            <div class="mb-4">
+              <label class="form-label small fw-bold d-block mb-2">Seleziona Ruolo Profilo</label>
+              <div class="row g-2">
+                <div class="col-6">
+                  <input type="radio" class="btn-check" name="regRole" id="roleBuyer" value="BUYER" checked>
+                  <label class="role-select-card card-buyer" for="roleBuyer">
+                    <i class="bi bi-cart-check-fill"></i>
+                    <strong class="d-block small">Compratore</strong>
+                    <span class="small opacity-75" style="font-size:0.72rem;">Cerca, recensisce e fa offerte</span>
+                  </label>
+                </div>
+                <div class="col-6">
+                  <input type="radio" class="btn-check" name="regRole" id="roleSeller" value="SELLER">
+                  <label class="role-select-card card-seller" for="roleSeller">
+                    <i class="bi bi-briefcase-fill"></i>
+                    <strong class="d-block small">Venditore</strong>
+                    <span class="small opacity-75" style="font-size:0.72rem;">Pubblica annunci, modifica prezzi</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+              <i class="bi bi-check-circle-fill me-1"></i> Crea Profilo & Accedi Subito
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NUOVO ANNUNCIO -->
+  <div class="modal fade" id="createPropertyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-primary text-white rounded-top-4">
+          <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Crea Nuovo Annuncio</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="createPropertyForm" onsubmit="handleCreateProperty(event)">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label small fw-bold">Titolo Annuncio</label>
+                <input type="text" class="form-control" id="newTitle" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Tipo Transazione</label>
+                <select class="form-select" id="newType">
+                  <option value="SALE">Vendita</option>
+                  <option value="RENT">Affitto</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Categoria</label>
+                <select class="form-select" id="newCat">
+                  <option value="Appartamenti">Appartamenti</option>
+                  <option value="Ville">Ville</option>
+                  <option value="Box Auto">Box Auto</option>
+                  <option value="Terreni Edificabili">Terreni Edificabili</option>
+                  <option value="Attici">Attici</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-bold">Prezzo (€)</label>
+                <input type="number" class="form-control" id="newPrice" placeholder="es. 250000" required>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-bold">Superficie (mq)</label>
+                <input type="number" class="form-control" id="newSqm" placeholder="es. 85" required>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-bold">Locali</label>
+                <input type="number" class="form-control" id="newRooms" min="1" value="3" placeholder="es. 3" required>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-bold">Bagni</label>
+                <input type="number" class="form-control" id="newBathrooms" min="1" value="2" placeholder="es. 2" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-bold">Città</label>
+                <input type="text" class="form-control" id="newCity" placeholder="es. Roma" required>
+              </div>
+              <div class="col-md-8">
+                <label class="form-label small fw-bold">Indirizzo</label>
+                <input type="text" class="form-control" id="newAddress" placeholder="es. Via del Corso 12" required>
+              </div>
+
+              <!-- Posizione e Coordinate per la Mappa -->
+              <div class="col-12">
+                <div class="p-3 bg-light rounded-3 border">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label small fw-bold mb-0 text-primary">
+                      <i class="bi bi-geo-alt-fill text-danger me-1"></i>Posizione e Coordinate Mappa
+                    </label>
+                    <span class="badge bg-white text-muted border">Leaflet / Mapbox API</span>
+                  </div>
+                  <p class="text-muted small mb-2">Imposta le coordinate geografiche (latitudine e longitudine) per posizionare l'immobile sulla mappa interattiva:</p>
+                  
+                  <div class="row g-2 mb-2">
+                    <div class="col-md-6">
+                      <label class="form-label small text-muted mb-1 fw-semibold">Latitudine</label>
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-compass"></i></span>
+                        <input type="number" step="any" class="form-control" id="newLat" value="41.9028" placeholder="es. 41.9028" required oninput="updateCreateMapFromInputs()">
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label small text-muted mb-1 fw-semibold">Longitudine</label>
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-compass-fill"></i></span>
+                        <input type="number" step="any" class="form-control" id="newLon" value="12.4964" placeholder="es. 12.4964" required oninput="updateCreateMapFromInputs()">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="d-flex flex-wrap gap-1 align-items-center mb-2">
+                    <small class="text-muted me-1 fw-semibold">Preimposta città:</small>
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size: 0.75rem;" onclick="setNewCoordinates(41.9028, 12.4964, 'Roma')">Roma</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size: 0.75rem;" onclick="setNewCoordinates(45.4642, 9.1900, 'Milano')">Milano</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size: 0.75rem;" onclick="setNewCoordinates(43.7696, 11.2558, 'Firenze')">Firenze</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size: 0.75rem;" onclick="setNewCoordinates(40.8518, 14.2681, 'Napoli')">Napoli</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size: 0.75rem;" onclick="setNewCoordinates(45.0703, 7.6869, 'Torino')">Torino</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size: 0.75rem;" onclick="setNewCoordinates(44.4949, 11.3426, 'Bologna')">Bologna</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size: 0.75rem;" onclick="setNewCoordinates(39.3015, 16.2520, 'Cosenza')">Cosenza</button>
+                  </div>
+
+                  <!-- Mini Mappa Interattiva nel Modale di Creazione -->
+                  <div id="createPropertyMap" style="height: 190px; width: 100%; border-radius: 8px; border: 1px solid #ced4da;"></div>
+                  <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-info-circle me-1"></i>Clicca sulla mappa o trascina il puntatore per aggiornare automaticamente le coordinate.
+                  </small>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label small fw-bold">URL Foto</label>
+                <input type="url" class="form-control" id="newImage" value="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80">
+              </div>
+              <div class="col-12">
+                <label class="form-label small fw-bold">Descrizione</label>
+                <textarea class="form-control" id="newDesc" rows="3" required></textarea>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mt-4 fw-bold">Pubblica Immobile</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGICA APPLICATIVA -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let currentUser = null;
+
+    let users = [
+      { id: 1, name: "Lorenzo Direttore", email: "superadmin@realestate.it", password: "admin123", role: "ADMIN", originalRole: "ADMIN", isBanned: false },
+      { id: 2, name: "Monica Voci", email: "monica.voci@realestate.it", password: "seller123", role: "SELLER", originalRole: "SELLER", isBanned: false },
+      { id: 3, name: "Luigi Cozza", email: "luigi.cozza@realestate.it", password: "seller123", role: "SELLER", originalRole: "SELLER", isBanned: false },
+      { id: 4, name: "Gennaro Guarino", email: "gennaro.guarino@email.it", password: "buyer123", role: "BUYER", originalRole: "BUYER", isBanned: false }
+    ];
+
+    let properties = [
+      {
+        id: 1,
+        sellerId: 2,
+        sellerName: "Monica Voci",
+        title: "Luminoso Trilocale Ristrutturato con Terrazzo a Roma",
+        category: "Appartamenti",
+        transactionType: "SALE",
+        originalPrice: 320000,
+        currentPrice: 289000,
+        hasPriceDrop: true,
+        squareMeters: 95,
+        rooms: 3,
+        bathrooms: 2,
+        address: "Via Fonteiana 45",
+        city: "Roma",
+        lat: 41.8785,
+        lon: 12.4542,
+        mainImageUrl: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1000&q=80",
+        description: "Splendido appartamento situato in zona Monteverde a Roma. Completamente ristrutturato nel 2024 con parquet in rovere, infissi a taglio termico e aria condizionata canalizzata. Ampio soggiorno living, cucina a vista, doppi servizi e favoloso terrazzo vivibile di 25 mq.",
+        auction: null,
+        reviews: [
+          { id: 1, author: "Gennaro Guarino", rating: 5, comment: "Ho visitato questo immobile la scorsa settimana con l'agente. Ristrutturazione eccellente e terrazzo spettacolare!", hasVisited: true, date: "3 giorni fa" },
+          { id: 2, author: "Gennaro Guarino", rating: 4, comment: "Ottima posizione a Monteverde. Prezzo scontato molto interessante.", hasVisited: true, date: "1 giorno fa" }
+        ]
+      },
+      {
+        id: 2,
+        sellerId: 2,
+        sellerName: "Monica Voci",
+        title: "Elegante Villa sulle Colline Fiorentine con Parco e Piscina",
+        category: "Ville",
+        transactionType: "SALE",
+        originalPrice: 750000,
+        currentPrice: 750000,
+        hasPriceDrop: false,
+        squareMeters: 340,
+        rooms: 8,
+        bathrooms: 4,
+        address: "Via degli Ulivi 12",
+        city: "Firenze",
+        lat: 43.8050,
+        lon: 11.2980,
+        mainImageUrl: "https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=1000&q=80",
+        description: "Prestigiosa villa unifamiliare immersa nel verde delle colline di Fiesole con parco recintato di 2.000 mq, piscina panoramica con vista sul Duomo di Firenze, 4 camere, dépendance e garage doppio.",
+        auction: {
+          startingPrice: 700000,
+          currentHighestBid: 725000,
+          highestBidder: "Gennaro Guarino",
+          endDate: "17 Novembre 2026, 18:00",
+          active: true
+        },
+        reviews: [
+          { id: 3, author: "Gennaro Guarino", rating: 5, comment: "Villa favolosa, parco curatissimo e panorama unico al tramonto.", hasVisited: true, date: "5 giorni fa" }
+        ]
+      },
+      {
+        id: 3,
+        sellerId: 2,
+        sellerName: "Monica Voci",
+        title: "Moderno Bilocale Arredato in Porta Nuova / Isola a Milano",
+        category: "Appartamenti",
+        transactionType: "RENT",
+        originalPrice: 1600,
+        currentPrice: 1450,
+        hasPriceDrop: true,
+        squareMeters: 60,
+        rooms: 2,
+        bathrooms: 1,
+        address: "Via Gaetano de Castillia 18",
+        city: "Milano",
+        lat: 45.4855,
+        lon: 9.1912,
+        mainImageUrl: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1000&q=80",
+        description: "In moderno stabile con portineria e ascensore, bilocale finemente arredato con mobili su misura, domotica e balcone panoramico a pochi passi dal Bosco Verticale e M5 Isola.",
+        auction: null,
+        reviews: []
+      },
+      {
+        id: 4,
+        sellerId: 3,
+        sellerName: "Luigi Cozza",
+        title: "Box Auto Singolo con Serranda Elettrica Zona Crocetta",
+        category: "Box Auto",
+        transactionType: "SALE",
+        originalPrice: 35000,
+        currentPrice: 32000,
+        hasPriceDrop: true,
+        squareMeters: 18,
+        rooms: 1,
+        bathrooms: 0,
+        address: "Corso Duca degli Abruzzi 24",
+        city: "Torino",
+        lat: 45.0610,
+        lon: 7.6620,
+        mainImageUrl: "https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=1000&q=80",
+        description: "Comodo box auto singolo con rampa antigelo riscaldata, serranda telecomandata e presa per ricarica scooter elettrico.",
+        auction: null,
+        reviews: []
+      },
+      {
+        id: 5,
+        sellerId: 3,
+        sellerName: "Luigi Cozza",
+        title: "Terreno Edificabile Panoramico per Villa Singola o Bifamiliare",
+        category: "Terreni Edificabili",
+        transactionType: "SALE",
+        originalPrice: 180000,
+        currentPrice: 180000,
+        hasPriceDrop: false,
+        squareMeters: 1200,
+        rooms: 0,
+        bathrooms: 0,
+        address: "Via dei Colli 8",
+        city: "Bologna",
+        lat: 44.4750,
+        lon: 11.3200,
+        mainImageUrl: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=80",
+        description: "Lotto di terreno pianeggiante già urbanizzato con allacciamenti luce, acqua, gas e fibra. Possibilità di edificare 350 mq di superficie utile.",
+        auction: null,
+        reviews: []
+      },
+      {
+        id: 6,
+        sellerId: 3,
+        sellerName: "Luigi Cozza",
+        title: "Splendido Attico Panoramico Arredato con Terrazzo a Roma",
+        category: "Appartamenti",
+        transactionType: "RENT",
+        originalPrice: 2400,
+        currentPrice: 2200,
+        hasPriceDrop: true,
+        squareMeters: 110,
+        rooms: 4,
+        bathrooms: 2,
+        address: "Via dei Coronari 28",
+        city: "Roma",
+        lat: 41.9004,
+        lon: 12.4705,
+        mainImageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1000&q=80",
+        description: "Prestigioso attico arredato in elegante palazzo d'epoca con ascensore. Ampio salone doppio con camino, cucina all'americana completa di elettrodomestici, suite padronale con bagno privato e favoloso terrazzo panoramico a livello.",
+        auction: null,
+        reviews: [
+          { id: 4, author: "Gennaro Guarino", rating: 5, comment: "Attico incantevole, terrazzo con vista indimenticabile e proprietario molto disponibile.", hasVisited: true, date: "4 giorni fa" }
+        ]
+      },
+      {
+        id: 7,
+        sellerId: 2,
+        sellerName: "Monica Voci",
+        title: "Elegante Villa Unifamiliare con Parco e Piscina a Fiesole",
+        category: "Ville",
+        transactionType: "RENT",
+        originalPrice: 4200,
+        currentPrice: 3800,
+        hasPriceDrop: true,
+        squareMeters: 280,
+        rooms: 7,
+        bathrooms: 3,
+        address: "Via Belvedere 14",
+        city: "Firenze",
+        lat: 43.8010,
+        lon: 11.2950,
+        mainImageUrl: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1000&q=80",
+        description: "Esclusiva villa panoramica in locazione residenziale, immersa nelle colline fiorentine. Parco privato di 1.500 mq, piscina privata a sfioro, dépendance per custode, climatizzazione totale e videosorveglianza.",
+        auction: null,
+        reviews: []
+      },
+      {
+        id: 8,
+        sellerId: 3,
+        sellerName: "Luigi Cozza",
+        title: "Posto Auto Coperto e Box in Garage Videosorvegliato a Milano",
+        category: "Box Auto",
+        transactionType: "RENT",
+        originalPrice: 210,
+        currentPrice: 190,
+        hasPriceDrop: true,
+        squareMeters: 16,
+        rooms: 1,
+        bathrooms: 0,
+        address: "Via Vittor Pisani 12",
+        city: "Milano",
+        lat: 45.4808,
+        lon: 9.2012,
+        mainImageUrl: "https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=1000&q=80",
+        description: "Ampio box auto singolo per auto di grandi dimensioni o SUV in stabile signorile a 200 metri dalla Stazione Centrale. Accesso con cancello automatico telecomandato, corsia di manovra illuminata, punto presa ricarica elettrica.",
+        auction: null,
+        reviews: []
+      },
+      {
+        id: 9,
+        sellerId: 2,
+        sellerName: "Monica Voci",
+        title: "Luminoso Bilocale Ristrutturato per Studenti e Professionisti a Bologna",
+        category: "Appartamenti",
+        transactionType: "RENT",
+        originalPrice: 900,
+        currentPrice: 850,
+        hasPriceDrop: true,
+        squareMeters: 48,
+        rooms: 2,
+        bathrooms: 1,
+        address: "Via Zamboni 42",
+        city: "Bologna",
+        lat: 44.4965,
+        lon: 11.3524,
+        mainImageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1000&q=80",
+        description: "Moderno bilocale nel cuore universitario di Bologna, completamente restaurato e arredato a nuovo. Composto da ingresso, zona living con cucina a induzione, camera matrimoniale, fibra ultraveloce, aria condizionata e cantina di pertinenza.",
+        auction: null,
+        reviews: []
+      },
+      {
+        id: 10,
+        sellerId: 2,
+        sellerName: "Monica Voci",
+        title: "Trilocale Ristrutturato su Corso Mazzini a Cosenza",
+        category: "Appartamenti",
+        transactionType: "SALE",
+        originalPrice: 145000,
+        currentPrice: 129000,
+        hasPriceDrop: true,
+        squareMeters: 90,
+        rooms: 3,
+        bathrooms: 2,
+        address: "Corso Mazzini 120",
+        city: "Cosenza",
+        lat: 39.3015,
+        lon: 16.2520,
+        mainImageUrl: "https://images.unsplash.com/photo-1502005229762-ae1b46642009?auto=format&fit=crop&w=1000&q=80",
+        description: "Splendido appartamento situato nella prestigiosa isola pedonale di Corso Mazzini a Cosenza, nel cuore commerciale e culturale della città (MAB). Totalmente ristrutturato con ottime finiture, parquet moderno, infissi insonorizzati a taglio termico, riscaldamento autonomo, doppi servizi, cucina abitabile, due balconi panoramici e cantina.",
+        auction: null,
+        reviews: []
+      },
+      {
+        id: 11,
+        sellerId: 3,
+        sellerName: "Luigi Cozza",
+        title: "Quadrilocale Arredato per Studenti e Famiglie vicino Unical / Centro",
+        category: "Appartamenti",
+        transactionType: "RENT",
+        originalPrice: 650,
+        currentPrice: 580,
+        hasPriceDrop: true,
+        squareMeters: 105,
+        rooms: 4,
+        bathrooms: 2,
+        address: "Via Panebianco 88",
+        city: "Cosenza",
+        lat: 39.3140,
+        lon: 16.2460,
+        mainImageUrl: "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?auto=format&fit=crop&w=1000&q=80",
+        description: "Spazioso quadrilocale in locazione su Via Panebianco a Cosenza, ottimamente collegato sia con il centro cittadino che con il Campus Universitario della Calabria (Unical). Composto da salone luminoso, cucina abitabile con veranda, tre ampie camere, doppi servizi, termoautonomo, autoclave condominiale e posto auto in corte recintata con cancello elettrico.",
+        auction: null,
+        reviews: []
+      }
+    ];
+
+    let contactMessages = [
+      {
+        id: 1,
+        propertyId: 1,
+        subject: "[ANN-1] Luminoso Trilocale Ristrutturato con Terrazzo a Roma",
+        buyerName: "Gennaro Guarino",
+        buyerEmail: "gennaro.guarino@email.it",
+        message: "Gentile Monica, vorrei effettuare un secondo sopralluogo sabato mattina per misurare la parete della cucina. È disponibile?",
+        date: "2 giorni fa"
+      },
+      {
+        id: 2,
+        propertyId: 4,
+        subject: "[ANN-4] Box Auto Singolo con Serranda Elettrica Zona Crocetta",
+        buyerName: "Gennaro Guarino",
+        buyerEmail: "gennaro.guarino@email.it",
+        message: "Gentile Luigi, il box auto è accessibile comodamente anche per un SUV di grandi dimensioni? Rimango in attesa di un riscontro, grazie.",
+        date: "1 giorno fa"
+      }
+    ];
+
+    let filterTransactionType = 'ALL';
+    let currentDetailProperty = null;
+    let selectedPropertyForAction = null;
+    let mapInstance = null;
+    let chartInstance = null;
+
+
+    let pendingModalToOpen = null;
+
+    document.addEventListener("DOMContentLoaded", function() {
+      updateUserUI();
+      renderRoleSwitcherDropdown();
+      renderProperties();
+      initChart();
+
+      const createModalEl = document.getElementById('createPropertyModal');
+      if (createModalEl) {
+        createModalEl.addEventListener('shown.bs.modal', function () {
+          initCreatePropertyMap();
+          if (createMapInstance) {
+            setTimeout(() => createMapInstance.invalidateSize(), 100);
+          }
+        });
+        createModalEl.addEventListener('hidden.bs.modal', function () {
+          resetCreatePropertyForm();
+        });
+      }
+
+      const offcanvasEl = document.getElementById('userRightOffcanvas');
+      if (offcanvasEl) {
+        offcanvasEl.addEventListener('hidden.bs.offcanvas', function () {
+          if (pendingModalToOpen === 'login') {
+            pendingModalToOpen = null;
+            openLoginModal();
+          } else if (pendingModalToOpen === 'register') {
+            pendingModalToOpen = null;
+            openRegisterModal();
+          }
+        });
+      }
+    });
+
+    function showView(viewName) {
+      document.getElementById('viewList').style.display = (viewName === 'list') ? 'block' : 'none';
+      document.getElementById('viewDetail').style.display = (viewName === 'detail') ? 'block' : 'none';
+      document.getElementById('viewSeller').style.display = (viewName === 'seller') ? 'block' : 'none';
+      document.getElementById('viewAdmin').style.display = (viewName === 'admin') ? 'block' : 'none';
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      if (viewName === 'seller') renderSellerDashboard();
+      if (viewName === 'admin') renderAdminDashboard();
+    }
+
+    function renderRoleSwitcherDropdown() {
+      const listContainer = document.getElementById('usersRoleMenuList');
+      if (!listContainer) return;
+
+      let html = '';
+
+      users.forEach(u => {
+        let roleTitle = '';
+        let badgeClass = '';
+
+        if (u.id === 1) {
+          roleTitle = 'Super Admin';
+          badgeClass = 'bg-danger';
+        } else if (u.role === 'ADMIN') {
+          roleTitle = 'Admin nominato';
+          badgeClass = 'bg-danger';
+        } else if (u.role === 'SELLER') {
+          roleTitle = 'Venditore';
+          badgeClass = 'bg-warning text-dark';
+        } else {
+          roleTitle = 'Acquirente';
+          badgeClass = 'bg-success';
+        }
+
+        const isCurrent = (currentUser && currentUser.id === u.id);
+        const activeClass = isCurrent ? ' active bg-primary text-white border-primary shadow-sm' : ' bg-white text-dark';
+        const bannedBadge = u.isBanned ? ' <span class="badge bg-danger ms-1">Bannato</span>' : '';
+        const checkIcon = isCurrent ? '<i class="bi bi-check-circle-fill text-white fs-5 ms-2"></i>' : '<i class="bi bi-chevron-right text-muted small ms-2"></i>';
+
+        html += `
+          <button type="button" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-2 px-3${activeClass}" onclick="switchUser(${u.id})">
+            <div class="d-flex align-items-center gap-2 text-truncate">
+              <span class="badge ${badgeClass} text-uppercase px-2 py-1">${roleTitle}</span>
+              <span class="fw-semibold text-truncate">${u.name}</span>
+              ${bannedBadge}
+            </div>
+            ${checkIcon}
+          </button>
+        `;
+      });
+
+      listContainer.innerHTML = html;
+    }
+
+    function switchUser(target) {
+      let u = null;
+      if (target === 'admin') {
+        u = users.find(x => x.id === 1);
+      } else if (target === 'seller_monica') {
+        u = users.find(x => x.id === 2);
+      } else if (target === 'seller_luigi') {
+        u = users.find(x => x.id === 3);
+      } else if (target === 'buyer') {
+        u = users.find(x => x.id === 4);
+      } else if (typeof target === 'number') {
+        u = users.find(x => x.id === target);
+      }
+
+      if (u) {
+        currentUser = {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          originalRole: u.originalRole
+        };
+      }
+
+      const offcanvasEl = document.getElementById('userRightOffcanvas');
+      if (offcanvasEl) {
+        const oc = bootstrap.Offcanvas.getInstance(offcanvasEl);
+        if (oc) oc.hide();
+      }
+
+      updateUserUI();
+      renderRoleSwitcherDropdown();
+      renderProperties();
+
+      showView('list');
+    }
+
+    function openLoginModalFromMenu() {
+      const offcanvasEl = document.getElementById('userRightOffcanvas');
+      if (offcanvasEl && offcanvasEl.classList.contains('show')) {
+        pendingModalToOpen = 'login';
+        const oc = bootstrap.Offcanvas.getInstance(offcanvasEl) || bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+        oc.hide();
+      } else {
+        openLoginModal();
+      }
+    }
+
+    function openRegisterModalFromMenu() {
+      const offcanvasEl = document.getElementById('userRightOffcanvas');
+      if (offcanvasEl && offcanvasEl.classList.contains('show')) {
+        pendingModalToOpen = 'register';
+        const oc = bootstrap.Offcanvas.getInstance(offcanvasEl) || bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+        oc.hide();
+      } else {
+        openRegisterModal();
+      }
+    }
+
+    function openLoginModal() {
+      document.getElementById('loginEmail').value = '';
+      document.getElementById('loginPassword').value = '';
+      const err = document.getElementById('loginErrorMessage');
+      if (err) {
+        err.classList.add('d-none');
+        err.innerText = '';
+      }
+      const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('loginModal'));
+      modal.show();
+    }
+
+    function fillQuickLogin(email, pwd) {
+      document.getElementById('loginEmail').value = email;
+      document.getElementById('loginPassword').value = pwd;
+    }
+
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const pwd = document.getElementById('loginPassword').value;
+      const err = document.getElementById('loginErrorMessage');
+
+      const found = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      if (!found) {
+        if (err) {
+          err.innerText = "Nessun account trovato con questo indirizzo email.";
+          err.classList.remove('d-none');
+        }
+        return;
+      }
+
+      if (found.isBanned) {
+        if (err) {
+          err.innerText = "Accesso negato: questo account è stato bannato dall'Amministratore!";
+          err.classList.remove('d-none');
+        }
+        return;
+      }
+
+      if (found.password && found.password !== pwd) {
+        if (err) {
+          err.innerText = "Password errata. Riprova.";
+          err.classList.remove('d-none');
+        }
+        return;
+      }
+
+      currentUser = {
+        id: found.id,
+        name: found.name,
+        email: found.email,
+        role: found.role,
+        originalRole: found.originalRole
+      };
+
+      updateUserUI();
+      renderRoleSwitcherDropdown();
+      renderProperties();
+
+      const modalInstance = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+      if (modalInstance) modalInstance.hide();
+
+      alert(`Accesso eseguito con successo! Benvenuto ${found.name}.`);
+
+      showView('list');
+    }
+
+    // Gestione Creazione Nuovo Profilo
+    function openRegisterModal() {
+      document.getElementById('regFirstName').value = '';
+      document.getElementById('regLastName').value = '';
+      document.getElementById('regEmail').value = '';
+      document.getElementById('regPassword').value = '';
+      document.getElementById('roleBuyer').checked = true;
+      const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('registerModal'));
+      modal.show();
+    }
+
+    function handleRegisterNewUser(e) {
+      e.preventDefault();
+      const firstName = document.getElementById('regFirstName').value.trim();
+      const lastName = document.getElementById('regLastName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const role = document.querySelector('input[name="regRole"]:checked').value;
+
+      if (!firstName || !lastName || !email || !password) {
+        alert("Compila tutti i campi obbligatori compresa la password!");
+        return;
+      }
+
+      if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+        alert("Esiste già un profilo registrato con questo indirizzo email!");
+        return;
+      }
+
+      const newId = users.length + 1;
+      const fullName = `${firstName} ${lastName}`;
+      const newUser = {
+        id: newId,
+        name: fullName,
+        email: email,
+        password: password,
+        role: role,
+        originalRole: role,
+        isBanned: false
+      };
+
+      // Aggiungi all'elenco globale utenti
+      users.push(newUser);
+
+      // Imposta come utente attualmente connesso
+      currentUser = {
+        id: newId,
+        name: fullName,
+        email: email,
+        role: role,
+        originalRole: role
+      };
+
+      bootstrap.Modal.getInstance(document.getElementById('registerModal')).hide();
+      updateUserUI();
+      renderRoleSwitcherDropdown();
+      renderProperties();
+
+      alert(`Benvenuto ${fullName}! Il tuo profilo ${role === 'SELLER' ? 'Venditore' : 'Compratore'} è stato creato con successo ed è subito attivo.`);
+
+      showView('list');
+    }
+
+    function updateUserUI() {
+      const userNameEl = document.getElementById('currentUserName');
+      const badge = document.getElementById('currentUserBadge');
+      const ocName = document.getElementById('offcanvasCurrentUserName');
+      const ocEmail = document.getElementById('offcanvasCurrentUserEmail');
+      const ocBadge = document.getElementById('offcanvasCurrentUserBadge');
+      const logoutBtn = document.getElementById('offcanvasLogoutBtn');
+
+      if (!currentUser) {
+        if (userNameEl) userNameEl.innerText = 'Ospite';
+        if (badge) {
+          badge.innerText = 'NON CONNESSO';
+          badge.className = 'badge bg-secondary ms-1';
+        }
+
+        if (ocName) ocName.innerText = 'Nessun profilo selezionato';
+        if (ocEmail) ocEmail.innerText = 'Accedi o seleziona un account per iniziare';
+        if (ocBadge) {
+          ocBadge.innerText = 'OSPITE';
+          ocBadge.className = 'badge bg-secondary';
+        }
+        if (logoutBtn) logoutBtn.style.display = 'none';
+
+        // Nascondi le funzionalità riservate
+        document.getElementById('navSeller').style.display = 'none';
+        document.getElementById('navNewProperty').style.display = 'none';
+        document.getElementById('navAdmin').style.display = 'none';
+        return;
+      }
+
+      // STATO AUTENTICATO
+      if (userNameEl) userNameEl.innerText = currentUser.name;
+      if (logoutBtn) logoutBtn.style.display = 'block';
+
+      const isNominatedAdmin = (currentUser.role === 'ADMIN' && currentUser.id !== 1);
+      if (isNominatedAdmin) {
+        badge.innerText = 'ADMIN NOMINATO';
+        badge.className = 'badge bg-danger ms-1';
+      } else if (currentUser.role === 'ADMIN') {
+        badge.innerText = 'SUPER ADMIN';
+        badge.className = 'badge bg-danger ms-1';
+      } else if (currentUser.role === 'SELLER') {
+        badge.innerText = 'VENDITORE';
+        badge.className = 'badge bg-warning text-dark ms-1';
+      } else {
+        badge.innerText = 'ACQUIRENTE';
+        badge.className = 'badge bg-success ms-1';
+      }
+
+      if (ocName) ocName.innerText = currentUser.name;
+      if (ocEmail) ocEmail.innerText = currentUser.email;
+      if (ocBadge) {
+        ocBadge.innerText = badge.innerText;
+        ocBadge.className = badge.className;
+      }
+
+      const isSeller = (currentUser.role === 'SELLER');
+      const isSellerAdmin = (currentUser.role === 'ADMIN' && (currentUser.originalRole === 'SELLER' || properties.some(p => p.sellerId === currentUser.id)));
+
+      document.getElementById('navSeller').style.display = (isSeller || isSellerAdmin) ? 'block' : 'none';
+      document.getElementById('navNewProperty').style.display = (isSeller || currentUser.role === 'ADMIN') ? 'block' : 'none';
+      document.getElementById('navAdmin').style.display = (currentUser.role === 'ADMIN') ? 'block' : 'none';
+    }
+
+    function logout() {
+      currentUser = null;
+      updateUserUI();
+      renderRoleSwitcherDropdown();
+      renderProperties();
+
+      const offcanvasEl = document.getElementById('userRightOffcanvas');
+      if (offcanvasEl) {
+        const oc = bootstrap.Offcanvas.getInstance(offcanvasEl);
+        if (oc) oc.hide();
+      }
+
+      alert("Disconnessione effettuata. Stai navigando come Ospite.");
+      showView('list');
+    }
+
+    // RENDERING LISTA IMMOBILI
+    function setFilterType(type) {
+      filterTransactionType = type;
+      const btnAll = document.getElementById('btnFilterALL');
+      const btnSale = document.getElementById('btnFilterSALE');
+      const btnRent = document.getElementById('btnFilterRENT');
+      if (btnAll && btnSale && btnRent) {
+        btnAll.className = (type === 'ALL') ? 'btn btn-light text-dark fw-bold px-4 shadow-sm' : 'btn btn-outline-light px-4';
+        btnSale.className = (type === 'SALE') ? 'btn btn-light text-dark fw-bold px-4 shadow-sm' : 'btn btn-outline-light px-4';
+        btnRent.className = (type === 'RENT') ? 'btn btn-light text-dark fw-bold px-4 shadow-sm' : 'btn btn-outline-light px-4';
+      }
+      renderProperties();
+    }
+
+    function resetAllFilters() {
+      document.getElementById('filterCategory').value = 'ALL';
+      document.getElementById('filterCity').value = '';
+      document.getElementById('filterMaxPrice').value = '';
+      document.getElementById('filterMinSqm').value = '';
+      document.getElementById('sortSelect').value = 'recent';
+      setFilterType('ALL');
+    }
+
+    function renderProperties() {
+      const cat = document.getElementById('filterCategory').value;
+      const city = document.getElementById('filterCity').value.toLowerCase().trim();
+      const maxPrice = Number(document.getElementById('filterMaxPrice').value) || 0;
+      const minSqm = Number(document.getElementById('filterMinSqm').value) || 0;
+      const sort = document.getElementById('sortSelect').value;
+
+      let filtered = properties.filter(p => {
+        if (filterTransactionType !== 'ALL' && p.transactionType !== filterTransactionType) return false;
+        if (cat !== 'ALL' && p.category !== cat) return false;
+        if (city && !p.city.toLowerCase().includes(city) && !p.address.toLowerCase().includes(city)) return false;
+        if (maxPrice > 0 && p.currentPrice > maxPrice) return false;
+        if (minSqm > 0 && p.squareMeters < minSqm) return false;
+        return true;
+      });
+
+      // Ordinamento per prezzo/metri quadri
+      filtered.sort((a, b) => {
+        if (sort === 'price_asc') return a.currentPrice - b.currentPrice;
+        if (sort === 'price_desc') return b.currentPrice - a.currentPrice;
+        if (sort === 'sqm_asc') return a.squareMeters - b.squareMeters;
+        if (sort === 'sqm_desc') return b.squareMeters - a.squareMeters;
+        if (sort === 'price_and_sqm') return (a.currentPrice - b.currentPrice) || (a.squareMeters - b.squareMeters);
+        return b.id - a.id;
+      });
+
+      const countEl = document.getElementById('propertiesCount');
+      if (countEl) {
+        countEl.innerHTML = `Trovati <strong>${filtered.length}</strong> immobili corrispondenti ai criteri`;
+      }
+
+      const grid = document.getElementById('propertyCardsGrid');
+      grid.innerHTML = '';
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-12 text-center py-5 bg-white rounded-4 shadow-sm">
+            <i class="bi bi-search text-muted display-4 mb-3 d-block"></i>
+            <h5>Nessun immobile corrisponde ai criteri selezionati.</h5>
+          </div>`;
+        return;
+      }
+
+      filtered.forEach(p => {
+        const cardCol = document.createElement('div');
+        cardCol.className = 'col-12 col-md-6 col-lg-4';
+        cardCol.innerHTML = `
+
+          <div class="card h-100 realestate-card-hover position-relative">
+            ${p.auction ? `
+
+              <div class="auction-active-ribbon"><i class="bi bi-hammer"></i> ASTA ATTIVA</div>
+            ` : ''}
+
+            <div class="position-relative overflow-hidden">
+              <img src="${p.mainImageUrl}" class="card-img-top" alt="${p.title}">
+              <span class="badge position-absolute bottom-0 start-0 m-3 px-3 py-2 rounded-pill ${p.transactionType === 'SALE' ? 'bg-primary' : 'bg-success'}">
+                ${p.transactionType === 'SALE' ? 'In Vendita' : 'In Affitto'}
+              </span>
+              <span class="badge bg-dark bg-opacity-75 position-absolute bottom-0 end-0 m-3 px-2 py-1 rounded">
+                ${p.category}
+              </span>
+            </div>
+
+            <div class="card-body d-flex flex-column p-3">
+              <div class="text-muted small mb-1">
+                <i class="bi bi-geo-alt-fill text-danger me-1"></i>${p.address}, ${p.city}
+              </div>
+
+              <h6 class="card-title fw-bold text-dark mb-2" style="min-height: 44px; cursor: pointer;" onclick="openDetail(${p.id})">
+                ${p.title}
+              </h6>
+
+
+              <div class="my-2 p-2 bg-light rounded-2 d-flex align-items-center justify-content-between">
+                <div>
+                  ${p.hasPriceDrop ? `
+
+                    <span class="price-strikethrough">€ ${p.originalPrice.toLocaleString('it-IT')}</span>
+                  ` : ''}
+                  <span class="fs-5 fw-bold ${p.hasPriceDrop ? 'text-danger' : 'text-primary'}">
+                    € ${p.currentPrice.toLocaleString('it-IT')}
+                  </span>
+                  ${p.transactionType === 'RENT' ? '<small class="text-muted">/mese</small>' : ''}
+                </div>
+
+                ${p.hasPriceDrop ? `
+
+                  <span class="price-discount-tag"><i class="bi bi-fire"></i> SCONTO</span>
+                ` : ''}
+              </div>
+
+              <div class="row g-2 text-center text-muted small my-2 py-2 border-top border-bottom">
+                <div class="col-4 border-end"><strong>${p.squareMeters} mq</strong></div>
+                <div class="col-4 border-end"><strong>${p.rooms} locali</strong></div>
+                <div class="col-4"><strong>${p.bathrooms} bagni</strong></div>
+              </div>
+
+              <div class="mt-auto pt-2 d-flex gap-2">
+                <button class="btn btn-outline-primary btn-sm flex-grow-1" onclick="openDetail(${p.id})">
+                  <i class="bi bi-eye me-1"></i> Dettagli & Mappa
+                </button>
+                <button class="btn btn-outline-success btn-sm px-3" onclick="openContactModal(${p.id})" title="Contatta il venditore">
+                  <i class="bi bi-chat-dots-fill"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(cardCol);
+      });
+    }
+
+
+    // GRAFICO PREZZI
+    function calculateCategoryPriceTrends() {
+      const saleMap = {};
+      const rentMap = {};
+      const categoriesOrder = ['Appartamenti', 'Ville', 'Box Auto', 'Terreni Edificabili', 'Attici'];
+
+      categoriesOrder.forEach(cat => {
+        saleMap[cat] = { totalSqm: 0, totalPrice: 0, count: 0 };
+        rentMap[cat] = { totalSqm: 0, totalPrice: 0, count: 0 };
+      });
+
+      properties.forEach(p => {
+        const cat = p.category || 'Altro';
+        if (!saleMap[cat]) saleMap[cat] = { totalSqm: 0, totalPrice: 0, count: 0 };
+        if (!rentMap[cat]) rentMap[cat] = { totalSqm: 0, totalPrice: 0, count: 0 };
+
+        const sqm = Number(p.squareMeters) || 0;
+        const price = Number(p.currentPrice) || Number(p.originalPrice) || 0;
+
+        if (sqm > 0 && price > 0) {
+          if (p.transactionType === 'RENT') {
+            rentMap[cat].totalSqm += sqm;
+            rentMap[cat].totalPrice += price;
+            rentMap[cat].count += 1;
+          } else {
+            saleMap[cat].totalSqm += sqm;
+            saleMap[cat].totalPrice += price;
+            saleMap[cat].count += 1;
+          }
+        }
+      });
+
+      let labels = categoriesOrder.filter(cat => (saleMap[cat].count > 0 || rentMap[cat].count > 0));
+      Object.keys(saleMap).forEach(cat => {
+        if (!labels.includes(cat) && (saleMap[cat].count > 0 || rentMap[cat].count > 0)) {
+          labels.push(cat);
+        }
+      });
+      if (labels.length === 0) {
+        labels = categoriesOrder;
+      }
+
+      const saleData = labels.map(cat => {
+        const item = saleMap[cat];
+        return (item && item.totalSqm > 0) ? Math.round(item.totalPrice / item.totalSqm) : 0;
+      });
+
+      const rentData = labels.map(cat => {
+        const item = rentMap[cat];
+        return (item && item.totalSqm > 0) ? Math.round(item.totalPrice / item.totalSqm) : 0;
+      });
+
+      return { labels, saleData, rentData };
+    }
+
+    function initChart() {
+      const canvasEl = document.getElementById('marketChart');
+      if (!canvasEl) return;
+      const ctx = canvasEl.getContext('2d');
+      const trends = calculateCategoryPriceTrends();
+
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: trends.labels,
+          datasets: [
+            {
+              label: 'Vendita (€ / mq)',
+              data: trends.saleData,
+              backgroundColor: 'rgba(13, 110, 253, 0.8)',
+              borderColor: '#0d6efd',
+              borderWidth: 2,
+              borderRadius: 6,
+              hoverBackgroundColor: 'rgba(13, 110, 253, 1)',
+              yAxisID: 'y'
+            },
+            {
+              label: 'Affitto (€ / mq / mese)',
+              data: trends.rentData,
+              backgroundColor: 'rgba(25, 135, 84, 0.8)',
+              borderColor: '#198754',
+              borderWidth: 2,
+              borderRadius: 6,
+              hoverBackgroundColor: 'rgba(25, 135, 84, 1)',
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: {
+            duration: 600
+          },
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                usePointStyle: true,
+                padding: 15,
+                font: { weight: 'bold' }
+              }
+            },
+            tooltip: {
+              displayColors: false,
+              callbacks: {
+                label: function(context) {
+                  if (context.datasetIndex === 0) {
+                    return '🟦 Vendita: € ' + context.parsed.y.toLocaleString('it-IT') + ' / mq';
+                  } else {
+                    return '🟩 Affitto: € ' + context.parsed.y.toLocaleString('it-IT') + ' / mq al mese';
+                  }
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false }
+            },
+            y: {
+              type: 'linear',
+              position: 'left',
+              beginAtZero: true,
+              ticks: {
+                callback: (val) => '€ ' + val.toLocaleString('it-IT')
+              }
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              beginAtZero: true,
+              grid: {
+                drawOnChartArea: false
+              },
+              ticks: {
+                callback: (val) => '€ ' + val.toLocaleString('it-IT') + '/m'
+              }
+            }
+          }
+        }
+      });
+
+      const badgeCountEl = document.getElementById('chartPropertiesCount');
+      if (badgeCountEl) {
+        const saleCount = properties.filter(p => p.transactionType === 'SALE').length;
+        const rentCount = properties.filter(p => p.transactionType === 'RENT').length;
+        badgeCountEl.innerHTML = `<i class="bi bi-bar-chart-fill me-1"></i>${properties.length} Annunci (${saleCount} Vendite, ${rentCount} Affitti)`;
+      }
+    }
+
+    function updatePriceChart() {
+      if (!chartInstance) {
+        initChart();
+        return;
+      }
+      const trends = calculateCategoryPriceTrends();
+      chartInstance.data.labels = trends.labels;
+      chartInstance.data.datasets[0].data = trends.saleData;
+      chartInstance.data.datasets[1].data = trends.rentData;
+      chartInstance.update();
+
+      const badgeCountEl = document.getElementById('chartPropertiesCount');
+      if (badgeCountEl) {
+        const saleCount = properties.filter(p => p.transactionType === 'SALE').length;
+        const rentCount = properties.filter(p => p.transactionType === 'RENT').length;
+        badgeCountEl.innerHTML = `<i class="bi bi-bar-chart-fill me-1"></i>${properties.length} Annunci (${saleCount} Vendite, ${rentCount} Affitti)`;
+      }
+    }
+
+    function togglePriceChart() {
+      const el = document.getElementById('chartContainer');
+      const btn = document.getElementById('btnToggleChart');
+      // Controlla se il grafico è attualmente visibile
+      const isVisible = (el.style.display !== 'none');
+      if (isVisible) {
+        el.style.display = 'none';
+        if (btn) {
+          btn.innerHTML = '<i class="bi bi-graph-up me-1"></i> Mostra Grafico Prezzi';
+        }
+      } else {
+        el.style.display = 'block';
+        if (btn) {
+          btn.innerHTML = '<i class="bi bi-eye-slash-fill me-1"></i> Nascondi Grafico Prezzi';
+        }
+        if (chartInstance) {
+          chartInstance.resize();
+        }
+      }
+    }
+
+    // DETTAGLIO IMMOBILE
+    function openDetail(id) {
+      const p = properties.find(item => item.id === id);
+      if (!p) return;
+      currentDetailProperty = p;
+
+      const container = document.getElementById('detailContent');
+      const isOwnerOrAdmin = currentUser && (currentUser.role === 'ADMIN' || currentUser.id === p.sellerId);
+
+      container.innerHTML = `
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+          <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge px-3 py-2 rounded-pill ${p.transactionType === 'SALE' ? 'bg-primary' : 'bg-success'}">
+                ${p.transactionType === 'SALE' ? 'In Vendita' : 'In Affitto'}
+              </span>
+              <span class="badge bg-secondary px-3 py-2 rounded-pill">${p.category}</span>
+              ${p.hasPriceDrop ? '<span class="price-discount-tag"><i class="bi bi-fire"></i> PREZZO RIBASSATO</span>' : ''}
+              ${p.auction ? '<span class="badge bg-purple text-white px-3 py-2 rounded-pill" style="background-color: #7b2cbf;"><i class="bi bi-hammer me-1"></i> ASTA ATTIVA</span>' : ''}
+            </div>
+            <h2 class="fw-bold mb-1">${p.title}</h2>
+            <p class="text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i>${p.address}, ${p.city}</p>
+          </div>
+
+          <div class="bg-white p-3 rounded-4 shadow-sm border text-end">
+            <span class="text-muted small d-block">Prezzo Richiesto</span>
+            <div>
+              ${p.hasPriceDrop ? `<span class="price-strikethrough fs-5">€ ${p.originalPrice.toLocaleString('it-IT')}</span>` : ''}
+              <span class="fs-2 fw-bold ${p.hasPriceDrop ? 'text-danger' : 'text-primary'}">€ ${p.currentPrice.toLocaleString('it-IT')}</span>
+            </div>
+          </div>
+        </div>
+
+        ${isOwnerOrAdmin ? `
+          <div class="card bg-light border-0 shadow-sm rounded-4 mb-4 p-3 d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <span class="badge bg-dark px-3 py-2">Strumenti Gestione (${currentUser ? currentUser.role : ''})</span>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-warning btn-sm fw-semibold" onclick="openPriceDropModal(${p.id})">
+                <i class="bi bi-arrow-down-circle-fill me-1"></i> Modifica Prezzo
+              </button>
+              ${!p.auction ? `
+                <button class="btn text-white btn-sm fw-semibold" style="background-color: #7b2cbf;" onclick="openAuctionModal(${p.id})">
+                  <i class="bi bi-hammer me-1"></i> Crea Asta
+                </button>
+              ` : ''}
+              <button class="btn btn-primary btn-sm fw-semibold" onclick="openFacebookModal(${p.id})">
+                <i class="bi bi-facebook me-1"></i> Promuovi su Facebook API
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="handleDeleteProperty(${p.id})">
+                <i class="bi bi-trash-fill me-1"></i> Elimina
+              </button>
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="row g-4">
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+              <img src="${p.mainImageUrl}" class="img-fluid w-100" style="max-height: 450px; object-fit: cover;">
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+              <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Caratteristiche dell'Immobile</h5>
+              <div class="row g-3 text-center mb-4">
+                <div class="col-4 p-3 bg-light rounded-3">
+                  <span class="text-muted small d-block">Superficie</span>
+                  <strong class="fs-5">${p.squareMeters} mq</strong>
+                </div>
+                <div class="col-4 p-3 bg-light rounded-3">
+                  <span class="text-muted small d-block">Locali</span>
+                  <strong class="fs-5">${p.rooms}</strong>
+                </div>
+                <div class="col-4 p-3 bg-light rounded-3">
+                  <span class="text-muted small d-block">Bagni</span>
+                  <strong class="fs-5">${p.bathrooms}</strong>
+                </div>
+              </div>
+              <h5 class="fw-bold mb-2">Descrizione</h5>
+              <p class="text-secondary leading-relaxed">${p.description}</p>
+            </div>
+
+            <!-- Posizione -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Posizione Google Maps / Geocoding</h5>
+                <span class="badge bg-light text-dark border">
+                  <i class="bi bi-geo me-1 text-primary"></i>Lat: ${Number(p.lat).toFixed(4)}, Lon: ${Number(p.lon).toFixed(4)}
+                </span>
+              </div>
+
+              <div class="custom-map-container" id="detailMap"></div>
+            </div>
+
+            <!-- Recensioni -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-chat-heart text-danger me-2"></i>Recensioni dei Visitatori</h5>
+                <button class="btn btn-outline-primary btn-sm" onclick="toggleReviewForm()">
+                  <i class="bi bi-pencil-square me-1"></i> ${currentUser ? 'Scrivi Recensione' : 'Accedi per Recensire'}
+                </button>
+              </div>
+
+              <!-- Nuova Recensione -->
+              <div id="newReviewForm" class="bg-light p-3 rounded-3 mb-4 border" style="display: none;">
+                <h6 class="fw-bold mb-3">Lascia la tua recensione</h6>
+                <div class="mb-3">
+                  <label class="form-label small fw-bold">Valutazione</label>
+                  <select class="form-select" id="newReviewRating">
+                    <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                    <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                    <option value="3">⭐⭐⭐ (3/5)</option>
+                    <option value="2">⭐⭐ (2/5)</option>
+                    <option value="1">⭐ (1/5)</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small fw-bold">Commento</label>
+                  <textarea class="form-control" id="newReviewComment" rows="3" placeholder="Descrivi il sopralluogo..." required></textarea>
+                </div>
+
+                <!-- Verifica Visita -->
+                <div class="form-check p-3 bg-white rounded-3 border mb-3">
+                  <input class="form-check-input" type="checkbox" id="visitedCheckbox" required>
+                  <label class="form-check-label small fw-bold" for="visitedCheckbox">
+                    <i class="bi bi-patch-check-fill text-success me-1"></i>
+                    Dichiaro di aver visitato personalmente questo immobile con il venditore.
+                  </label>
+                </div>
+
+                <button type="button" class="btn btn-primary btn-sm px-4 fw-semibold" onclick="handleNewReview()">
+                  Pubblica Recensione
+                </button>
+              </div>
+
+              <!-- Lista Recensioni -->
+              <div id="reviewsList">
+                ${p.reviews.length > 0 ? p.reviews.map(r => `
+                  <div class="border-bottom py-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <strong>${r.author}</strong>
+                      <span class="verified-visitor-badge">
+                        <i class="bi bi-check2-circle"></i> Ha visitato l'immobile
+                      </span>
+                    </div>
+                    <div class="text-warning small mb-1">
+                      ${'⭐'.repeat(r.rating)} (${r.rating}/5)
+                    </div>
+                    <p class="text-secondary mb-1">${r.comment}</p>
+                    <small class="text-muted">${r.date}</small>
+                  </div>
+                `).join('') : '<p class="text-muted text-center py-3">Nessuna recensione presente per questo annuncio.</p>'}
+              </div>
+            </div>
+          </div>
+
+          <!-- Box Asta e Contatto -->
+          <div class="col-lg-4">
+            ${p.auction ? `
+              <!-- Box Asta Live -->
+              <div class="card border-0 shadow-sm rounded-4 mb-4 text-white p-4" style="background: linear-gradient(135deg, #480ca8 0%, #3f37c9 100%);">
+                <span class="badge bg-warning text-dark fw-bold mb-2">ASTA LIVE</span>
+                <span class="small opacity-75 d-block">Offerta Corrente Più Alta</span>
+                <h3 class="fw-bold mb-2">€ ${p.auction.currentHighestBid.toLocaleString('it-IT')}</h3>
+                <small class="d-block mb-3 opacity-75">Ultima offerta da: <strong>${p.auction.highestBidder}</strong></small>
+
+                <div class="bg-white text-dark p-3 rounded-3">
+                  <label class="form-label small fw-bold">Piazza un Rilancio</label>
+                  <div class="input-group mb-2">
+                    <span class="input-group-text">€</span>
+                    <input type="number" class="form-control" id="bidInput" placeholder="Min € ${(p.auction.currentHighestBid + 1000)}">
+                    <button class="btn btn-warning fw-bold" onclick="handlePlaceBid()">Rilancia</button>
+                  </div>
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Contatto Venditore -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 sticky-top" style="top: 85px;">
+              <h6 class="fw-bold mb-2">Contatta il Venditore</h6>
+              <p class="text-muted small">Modulo con codice e titolo dell'annuncio come oggetto precompilato.</p>
+              ${!currentUser ? `
+                <div class="alert alert-info py-2 px-3 small mb-3">
+                  <i class="bi bi-info-circle me-1"></i> Come ospite devi effettuare l'accesso per poter scrivere al venditore.
+                </div>
+              ` : ''}
+              <button class="btn btn-primary w-100 py-2 fw-semibold" onclick="openContactModal(${p.id})">
+                <i class="bi bi-chat-dots-fill me-1"></i> ${currentUser ? 'Invia Messaggio' : 'Accedi per Contattare'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      showView('detail');
+
+      // Mappa
+      setTimeout(() => {
+        if (mapInstance) {
+          mapInstance.remove();
+        }
+        mapInstance = L.map('detailMap').setView([p.lat, p.lon], 14);
+        const mapboxToken = 'pk.eyJ1IjoibG9yZW56b2Jhc2lsZTAwNCIsImEiOiJjbXdjMmxhMGcwMHJ0MnpzODZzeWVtbTJlIn0.Kpba4zbJuQanvkO4UjJRiQ';
+        L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`, {
+          attribution: '&copy; <a href="https://www.mapbox.com/" target="_blank">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
+          tileSize: 512,
+          zoomOffset: -1,
+          maxZoom: 19
+        }).addTo(mapInstance);
+        L.marker([p.lat, p.lon]).addTo(mapInstance)
+          .bindPopup(`<strong>${p.title}</strong><br>${p.address}, ${p.city}`).openPopup();
+      }, 200);
+    }
+
+    function openContactModal(id) {
+      if (!currentUser) {
+        alert("Per poter contattare il venditore devi prima effettuare l'accesso!");
+        openLoginModal();
+        return;
+      }
+      const p = properties.find(item => item.id === id);
+      if (!p) return;
+      selectedPropertyForAction = p;
+      document.getElementById('contactSubject').value = `[ANN-${p.id}] ${p.title}`;
+      document.getElementById('contactName').value = currentUser ? currentUser.name : '';
+      document.getElementById('contactEmail').value = currentUser ? currentUser.email : '';
+      const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('contactModal'));
+      modal.show();
+    }
+
+    function handleSendContact(e) {
+      e.preventDefault();
+      if (!currentUser) {
+        alert("Per poter contattare il venditore devi prima effettuare l'accesso!");
+        openLoginModal();
+        return;
+      }
+      const subject = document.getElementById('contactSubject').value;
+      const name = document.getElementById('contactName').value;
+      const email = document.getElementById('contactEmail').value;
+      const msg = document.getElementById('contactMessageText').value;
+
+      contactMessages.push({
+        id: contactMessages.length + 1,
+        propertyId: selectedPropertyForAction.id,
+        subject: subject,
+        buyerName: name,
+        buyerEmail: email,
+        message: msg,
+        date: "Pochi secondi fa"
+      });
+
+      bootstrap.Modal.getInstance(document.getElementById('contactModal')).hide();
+      alert("Messaggio inviato con successo al venditore con oggetto: " + subject);
+    }
+
+    // Modifica Prezzo
+    function openPriceDropModal(id) {
+      const p = properties.find(item => item.id === id);
+      if (!p) return;
+      selectedPropertyForAction = p;
+      document.getElementById('currentPriceDisplay').value = "€ " + p.currentPrice.toLocaleString('it-IT');
+      document.getElementById('newPriceInput').value = "";
+      const modal = new bootstrap.Modal(document.getElementById('priceDropModal'));
+      modal.show();
+    }
+
+    function handlePriceDrop() {
+      const newPrice = Number(document.getElementById('newPriceInput').value);
+      if (!newPrice || newPrice <= 0) {
+        alert("Inserisci un prezzo valido maggiore di zero!");
+        return;
+      }
+      if (newPrice === selectedPropertyForAction.currentPrice) {
+        alert("Il nuovo prezzo inserito coincide con il prezzo attuale.");
+        return;
+      }
+
+      if (newPrice < selectedPropertyForAction.currentPrice) {
+        selectedPropertyForAction.currentPrice = newPrice;
+        selectedPropertyForAction.hasPriceDrop = true;
+        alert("Prezzo ribassato con successo a € " + newPrice.toLocaleString('it-IT') + "! Il vecchio prezzo sarà visualizzato barrato.");
+      } else {
+        selectedPropertyForAction.currentPrice = newPrice;
+        if (newPrice >= selectedPropertyForAction.originalPrice) {
+          selectedPropertyForAction.originalPrice = newPrice;
+          selectedPropertyForAction.hasPriceDrop = false;
+        }
+        alert("Prezzo aumentato con successo a € " + newPrice.toLocaleString('it-IT') + "!");
+      }
+
+      bootstrap.Modal.getInstance(document.getElementById('priceDropModal')).hide();
+      renderProperties();
+      updatePriceChart();
+      if (document.getElementById('viewDetail').style.display === 'block') {
+        openDetail(selectedPropertyForAction.id);
+      } else {
+        renderSellerDashboard();
+      }
+    }
+
+    // Creazione Asta
+    function openAuctionModal(id) {
+      const p = properties.find(item => item.id === id);
+      if (!p) return;
+      selectedPropertyForAction = p;
+      document.getElementById('auctionBasePrice').value = p.currentPrice;
+      const modal = new bootstrap.Modal(document.getElementById('createAuctionModal'));
+      modal.show();
+    }
+
+    function handleCreateAuction() {
+      const base = Number(document.getElementById('auctionBasePrice').value) || selectedPropertyForAction.currentPrice;
+      selectedPropertyForAction.auction = {
+        startingPrice: base,
+        currentHighestBid: base,
+        highestBidder: "Nessuna offerta iniziale",
+        endDate: "20 Novembre 2026, 20:00",
+        active: true
+      };
+      bootstrap.Modal.getInstance(document.getElementById('createAuctionModal')).hide();
+      alert("Asta creata con successo per l'annuncio!");
+      openDetail(selectedPropertyForAction.id);
+    }
+
+    //Rilancio Asta
+    function handlePlaceBid() {
+      if (!currentUser) {
+        alert("Devi accedere o selezionare un profilo per fare un'offerta all'asta!");
+        openLoginModal();
+        return;
+      }
+      const bid = Number(document.getElementById('bidInput').value);
+      if (!bid || bid <= currentDetailProperty.auction.currentHighestBid) {
+        alert("Il rilancio deve essere maggiore dell'offerta corrente di € " + currentDetailProperty.auction.currentHighestBid);
+        return;
+      }
+      currentDetailProperty.auction.currentHighestBid = bid;
+      currentDetailProperty.auction.highestBidder = currentUser.name;
+      alert("Offerta piazzata con successo!");
+      openDetail(currentDetailProperty.id);
+    }
+
+    // Promozione Facebook
+    function openFacebookModal(id) {
+      const p = properties.find(item => item.id === id);
+      if (!p) return;
+      selectedPropertyForAction = p;
+      const modal = new bootstrap.Modal(document.getElementById('facebookModal'));
+      modal.show();
+    }
+
+    function handleFacebookPublish() {
+      const page = document.getElementById('fbPageName').value;
+      const postId = "100987654321_" + Date.now();
+      const body = document.getElementById('facebookModalBody');
+      body.innerHTML = `
+        <div class="alert alert-success">
+          <h6><i class="bi bi-check-circle-fill me-2"></i>Annuncio pubblicato con successo tramite Facebook Graph API!</h6>
+          <p class="small mb-1">Pagina target: <strong>${page}</strong></p>
+          <p class="small mb-1">Facebook Post ID: <code>${postId}</code></p>
+          <a href="https://facebook.com" target="_blank" class="btn btn-sm btn-outline-primary mt-2">Apri Post</a>
+        </div>
+      `;
+    }
+
+    // Recensioni
+    function toggleReviewForm() {
+      if (!currentUser) {
+        alert("Per poter scrivere una recensione devi prima effettuare l'accesso!");
+        openLoginModal();
+        return;
+      }
+      const form = document.getElementById('newReviewForm');
+      form.style.display = (form.style.display === 'none') ? 'block' : 'none';
+    }
+
+    function handleNewReview() {
+      if (!currentUser) {
+        alert("Per poter scrivere una recensione devi prima effettuare l'accesso!");
+        openLoginModal();
+        return;
+      }
+      const checked = document.getElementById('visitedCheckbox').checked;
+      if (!checked) {
+        alert("È necessario confermare di aver visitato personalmente l'immobile per poter scrivere una recensione!");
+        return;
+      }
+      const rating = Number(document.getElementById('newReviewRating').value);
+      const comment = document.getElementById('newReviewComment').value;
+      if (!comment) return;
+
+      currentDetailProperty.reviews.unshift({
+        id: currentDetailProperty.reviews.length + 1,
+        author: currentUser.name,
+        rating: rating,
+        comment: comment,
+        hasVisited: true,
+        date: "Pochi istanti fa"
+      });
+
+      alert("Recensione pubblicata con successo!");
+      openDetail(currentDetailProperty.id);
+    }
+
+    //Nuovo Immobile
+    let createMapInstance = null;
+    let createMapMarker = null;
+
+    function initCreatePropertyMap() {
+      const mapContainer = document.getElementById('createPropertyMap');
+      if (!mapContainer) return;
+
+      const latInput = document.getElementById('newLat');
+      const lonInput = document.getElementById('newLon');
+      const lat = parseFloat(latInput ? latInput.value : 41.9028) || 41.9028;
+      const lon = parseFloat(lonInput ? lonInput.value : 12.4964) || 12.4964;
+
+      if (!createMapInstance) {
+        createMapInstance = L.map('createPropertyMap').setView([lat, lon], 12);
+        const mapboxToken = 'pk.eyJ1IjoibG9yZW56b2Jhc2lsZTAwNCIsImEiOiJjbXdjMmxhMGcwMHJ0MnpzODZzeWVtbTJlIn0.Kpba4zbJuQanvkO4UjJRiQ';
+        L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`, {
+          attribution: '&copy; Mapbox &copy; OpenStreetMap',
+          tileSize: 512,
+          zoomOffset: -1,
+          maxZoom: 19
+        }).addTo(createMapInstance);
+
+        createMapMarker = L.marker([lat, lon], { draggable: true }).addTo(createMapInstance);
+
+        createMapMarker.on('dragend', function (e) {
+          const pos = e.target.getLatLng();
+          if (latInput) latInput.value = pos.lat.toFixed(6);
+          if (lonInput) lonInput.value = pos.lng.toFixed(6);
+        });
+
+        createMapInstance.on('click', function (e) {
+          createMapMarker.setLatLng(e.latlng);
+          if (latInput) latInput.value = e.latlng.lat.toFixed(6);
+          if (lonInput) lonInput.value = e.latlng.lng.toFixed(6);
+        });
+      } else {
+        createMapInstance.setView([lat, lon], 12);
+        if (createMapMarker) createMapMarker.setLatLng([lat, lon]);
+        createMapInstance.invalidateSize();
+      }
+    }
+
+    function updateCreateMapFromInputs() {
+      const latInput = document.getElementById('newLat');
+      const lonInput = document.getElementById('newLon');
+      if (!latInput || !lonInput) return;
+      const lat = parseFloat(latInput.value);
+      const lon = parseFloat(lonInput.value);
+      if (!isNaN(lat) && !isNaN(lon) && createMapInstance && createMapMarker) {
+        createMapMarker.setLatLng([lat, lon]);
+        createMapInstance.panTo([lat, lon]);
+      }
+    }
+
+    function setNewCoordinates(lat, lon, cityName) {
+      const latInput = document.getElementById('newLat');
+      const lonInput = document.getElementById('newLon');
+      const cityInput = document.getElementById('newCity');
+      if (latInput) latInput.value = lat;
+      if (lonInput) lonInput.value = lon;
+      if (cityName && cityInput && (!cityInput.value || cityInput.value === 'Roma' || cityInput.value === 'Milano' || cityInput.value === 'Firenze' || cityInput.value === 'Napoli' || cityInput.value === 'Torino' || cityInput.value === 'Bologna')) {
+        cityInput.value = cityName;
+      }
+      updateCreateMapFromInputs();
+    }
+
+    function openCreatePropertyModal() {
+      if (!currentUser) {
+        alert("Devi accedere come Venditore o Amministratore per poter pubblicare un annuncio!");
+        openLoginModal();
+        return;
+      }
+      const modalEl = document.getElementById('createPropertyModal');
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+      setTimeout(() => {
+        initCreatePropertyMap();
+      }, 250);
+    }
+
+    function resetCreatePropertyForm() {
+      const form = document.getElementById('createPropertyForm');
+      if (form) form.reset();
+
+      const titleEl = document.getElementById('newTitle');
+      if (titleEl) titleEl.value = '';
+      const typeEl = document.getElementById('newType');
+      if (typeEl) typeEl.value = 'SALE';
+      const catEl = document.getElementById('newCat');
+      if (catEl) catEl.value = 'Appartamenti';
+      const priceEl = document.getElementById('newPrice');
+      if (priceEl) priceEl.value = '';
+      const sqmEl = document.getElementById('newSqm');
+      if (sqmEl) sqmEl.value = '';
+      const roomsEl = document.getElementById('newRooms');
+      if (roomsEl) roomsEl.value = '3';
+      const bathroomsEl = document.getElementById('newBathrooms');
+      if (bathroomsEl) bathroomsEl.value = '2';
+      const cityEl = document.getElementById('newCity');
+      if (cityEl) cityEl.value = '';
+      const addressEl = document.getElementById('newAddress');
+      if (addressEl) addressEl.value = '';
+      const latEl = document.getElementById('newLat');
+      if (latEl) latEl.value = '41.9028';
+      const lonEl = document.getElementById('newLon');
+      if (lonEl) lonEl.value = '12.4964';
+      const imageEl = document.getElementById('newImage');
+      if (imageEl) imageEl.value = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80';
+      const descEl = document.getElementById('newDesc');
+      if (descEl) descEl.value = '';
+
+      if (createMapInstance && createMapMarker) {
+        createMapMarker.setLatLng([41.9028, 12.4964]);
+        createMapInstance.setView([41.9028, 12.4964], 12);
+      }
+    }
+
+    function handleCreateProperty(e) {
+      e.preventDefault();
+      if (!currentUser) {
+        alert("Devi accedere come Venditore o Amministratore per poter pubblicare un annuncio!");
+        openLoginModal();
+        return;
+      }
+
+      const roomsVal = parseInt(document.getElementById('newRooms').value, 10) || 1;
+      const bathroomsVal = parseInt(document.getElementById('newBathrooms').value, 10) || 1;
+      const latVal = parseFloat(document.getElementById('newLat').value) || 41.9028;
+      const lonVal = parseFloat(document.getElementById('newLon').value) || 12.4964;
+
+      const newProp = {
+        id: properties.length + 1,
+        sellerId: currentUser.id,
+        sellerName: currentUser.name,
+        title: document.getElementById('newTitle').value,
+        category: document.getElementById('newCat').value,
+        transactionType: document.getElementById('newType').value,
+        originalPrice: Number(document.getElementById('newPrice').value),
+        currentPrice: Number(document.getElementById('newPrice').value),
+        hasPriceDrop: false,
+        squareMeters: Number(document.getElementById('newSqm').value),
+        rooms: roomsVal,
+        bathrooms: bathroomsVal,
+        address: document.getElementById('newAddress').value,
+        city: document.getElementById('newCity').value,
+        lat: latVal,
+        lon: lonVal,
+        mainImageUrl: document.getElementById('newImage').value,
+        description: document.getElementById('newDesc').value,
+        auction: null,
+        reviews: []
+      };
+
+      properties.unshift(newProp);
+      resetCreatePropertyForm();
+      bootstrap.Modal.getInstance(document.getElementById('createPropertyModal')).hide();
+      alert("Annuncio pubblicato con successo! Il grafico dei prezzi medi è stato aggiornato.");
+      renderProperties();
+      updatePriceChart();
+      showView('list');
+    }
+
+    function handleDeleteProperty(id) {
+      if (confirm("Eliminare definitivamente questo annuncio?")) {
+        properties = properties.filter(p => p.id !== id);
+        alert("Annuncio eliminato.");
+        renderProperties();
+        updatePriceChart();
+        showView('list');
+      }
+    }
+
+    // DASHBOARD VENDITORE
+    function renderSellerDashboard() {
+      if (!currentUser) {
+        alert("Accedi come Venditore o Amministratore per visualizzare la Dashboard Venditore.");
+        showView('list');
+        return;
+      }
+      const tbody = document.getElementById('sellerPropertiesTable');
+      tbody.innerHTML = '';
+
+      const myList = properties.filter(p => p.sellerId === currentUser.id);
+
+      if (myList.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center py-4 text-muted">
+              <i class="bi bi-inbox fs-3 d-block mb-1"></i>
+              Nessun annuncio pubblicato da <strong>${currentUser.name}</strong>. Clicca su "Nuovo Annuncio" in alto per pubblicarne uno!
+            </td>
+          </tr>
+        `;
+      } else {
+        myList.forEach(p => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="ps-4">
+              <div class="d-flex align-items-center gap-2">
+                <a href="javascript:void(0)" class="fw-bold text-dark text-decoration-none" onclick="openDetail(${p.id})" title="Visualizza schermata dell'immobile" style="cursor: pointer;">
+                  <i class="bi bi-box-arrow-up-right me-1 text-primary"></i>${p.title}
+                </a>
+                ${p.hasPriceDrop ? '<span class="badge bg-danger ms-1">Ribassato</span>' : ''}
+              </div>
+            </td>
+            <td>
+              ${p.hasPriceDrop ? `<span class="price-strikethrough small d-block">€ ${p.originalPrice.toLocaleString('it-IT')}</span>` : ''}
+              <strong class="${p.hasPriceDrop ? 'text-danger' : 'text-dark'}">€ ${p.currentPrice.toLocaleString('it-IT')}</strong>
+            </td>
+            <td>${p.squareMeters} mq</td>
+            <td>${p.auction ? '<span class="badge bg-purple text-white" style="background-color:#7b2cbf;">Attiva</span>' : 'Nessuna'}</td>
+            <td class="text-end pe-4">
+              <button class="btn btn-sm btn-outline-info" onclick="openDetail(${p.id})" title="Visualizza Scheda Immobile">
+                <i class="bi bi-eye-fill"></i> Scheda
+              </button>
+              <button class="btn btn-sm btn-outline-warning ms-1" onclick="openPriceDropModal(${p.id})">Modifica Prezzo</button>
+              <button class="btn btn-sm btn-outline-primary ms-1" onclick="openFacebookModal(${p.id})"><i class="bi bi-facebook"></i></button>
+              <button class="btn btn-sm btn-outline-danger ms-1" onclick="handleDeleteProperty(${p.id})"><i class="bi bi-trash"></i></button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Messaggi
+      const msgDiv = document.getElementById('sellerMessagesList');
+      const myMessages = contactMessages.filter(m => {
+        const prop = properties.find(p => p.id === m.propertyId);
+        return prop && prop.sellerId === currentUser.id;
+      });
+
+      if (myMessages.length === 0) {
+        msgDiv.innerHTML = `<p class="text-muted mb-0">Nessun messaggio ricevuto per gli immobili di <strong>${currentUser.name}</strong>.</p>`;
+      } else {
+        msgDiv.innerHTML = myMessages.map(m => `
+          <div class="border rounded-3 p-3 mb-2 bg-light">
+            <div class="d-flex justify-content-between mb-1">
+              <strong class="text-primary">${m.subject}</strong>
+              <small class="text-muted">${m.date}</small>
+            </div>
+            <small class="text-muted d-block mb-2">Da: <strong>${m.buyerName}</strong> (${m.buyerEmail})</small>
+            <p class="mb-0 text-secondary">${m.message}</p>
+          </div>
+        `).join('');
+      }
+    }
+    //Pannello Admin
+    function renderAdminDashboard() {
+      if (!currentUser || currentUser.role !== 'ADMIN') {
+        alert("Accesso negato: questa schermata è riservata agli Amministratori.");
+        showView('list');
+        return;
+      }
+      // Tabella Utenti
+      const uTbody = document.getElementById('adminUsersTable');
+      uTbody.innerHTML = '';
+      users.forEach(u => {
+        const isSuperAdmin = (u.id === 1);
+        const isNominatedAdmin = (u.role === 'ADMIN' && u.id !== 1);
+        const originalRoleLabel = (u.originalRole === 'SELLER') ? 'Venditore' : 'Compratore';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="ps-4">#${u.id}</td>
+          <td>${u.name}</td>
+          <td>${u.email}</td>
+          <td>
+            <span class="badge ${u.role === 'ADMIN' ? 'bg-danger' : (u.role === 'SELLER' ? 'bg-warning text-dark' : 'bg-success')}">
+              ${isSuperAdmin ? 'Super Admin' : (isNominatedAdmin ? 'Admin nominato' : (u.role === 'SELLER' ? 'Venditore' : 'Acquirente'))}
+            </span>
+          </td>
+          <td><span class="badge ${u.isBanned ? 'bg-danger' : 'bg-success'}">${u.isBanned ? 'BANNATO' : 'ATTIVO'}</span></td>
+          <td class="text-end pe-4">
+            ${isSuperAdmin ? `
+              <span class="badge bg-secondary"><i class="bi bi-shield-check me-1"></i>Protetto (Super-Admin)</span>
+            ` : `
+              <!-- Opzione di unban -->
+              <button class="btn btn-sm ${u.isBanned ? 'btn-success' : 'btn-outline-danger'}" onclick="toggleBanUser(${u.id})">
+                ${u.isBanned ? '<i class="bi bi-check-circle me-1"></i>Sbanna' : '<i class="bi bi-slash-circle me-1"></i>Banna'}
+              </button>
+            `}
+
+            ${isNominatedAdmin ? `
+              <button class="btn btn-sm btn-outline-warning ms-1" onclick="demoteAdmin(${u.id})" title="Retrocedi a ${originalRoleLabel}">
+                <i class="bi bi-arrow-down-left-square me-1"></i>Retrocedi a ${originalRoleLabel}
+              </button>
+            ` : ''}
+
+            ${(!isSuperAdmin && u.role !== 'ADMIN') ? `
+              <button class="btn btn-sm btn-outline-primary ms-1" onclick="promoteToAdmin(${u.id})">
+                <i class="bi bi-shield-plus me-1"></i>Nomina Admin
+              </button>
+            ` : ''}
+          </td>
+        `;
+        uTbody.appendChild(tr);
+      });
+
+      // Tabella Moderazione Annunci
+      const pTbody = document.getElementById('adminPropertiesTable');
+      pTbody.innerHTML = '';
+      properties.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="ps-4">#${p.id}</td>
+          <td>${p.title}</td>
+          <td>€ ${p.currentPrice.toLocaleString('it-IT')}</td>
+          <td>${p.city}</td>
+          <td class="text-end pe-4">
+            <button class="btn btn-sm btn-danger" onclick="handleDeleteProperty(${p.id})">
+              <i class="bi bi-trash"></i> Cancella (Admin)
+            </button>
+          </td>
+        `;
+        pTbody.appendChild(tr);
+      });
+    }
+
+    function toggleBanUser(id) {
+      const u = users.find(item => item.id === id);
+      if (!u) return;
+
+      if (u.id === 1 || u.email === 'superadmin@realestate.it') {
+        alert("Operazione non consentita: Il Super Admin non può essere bannato!");
+        return;
+      }
+
+      u.isBanned = !u.isBanned;
+      alert(`Utente ${u.name} (${u.email}) ora: ${u.isBanned ? 'BANNATO' : 'SBANNATO / RIABILITATO'}`);
+      renderAdminDashboard();
+    }
+
+    function promoteToAdmin(id) {
+      const u = users.find(item => item.id === id);
+      if (!u) return;
+
+      if (!u.originalRole) {
+        u.originalRole = u.role;
+      }
+
+      u.role = 'ADMIN';
+
+      if (currentUser && currentUser.id === u.id) {
+        currentUser.role = 'ADMIN';
+        currentUser.originalRole = u.originalRole;
+        currentUser.name = u.name; // Nome puro, senza ruoli tra parentesi
+        updateUserUI();
+      }
+
+      renderRoleSwitcherDropdown();
+      alert(`Utente ${u.name} (${u.email}) è stato promosso ad Admin nominato! Gli sono stati concessi tutti i privilegi admin e continua ad accedere alla sua Dashboard Venditore se era venditore.`);
+      renderAdminDashboard();
+    }
+
+    function demoteAdmin(id) {
+      const u = users.find(item => item.id === id);
+      if (!u) return;
+
+      if (u.id === 1 || u.email === 'superadmin@realestate.it') {
+        alert("Operazione non consentita: Il Super Admin non può essere retrocesso!");
+        return;
+      }
+
+      const prevRole = u.originalRole || 'BUYER';
+      const roleLabel = (prevRole === 'SELLER') ? 'Venditore' : 'Acquirente';
+
+      u.role = prevRole;
+
+      if (currentUser && currentUser.id === u.id) {
+        currentUser.role = prevRole;
+        currentUser.originalRole = u.originalRole;
+        currentUser.name = u.name; // Nome puro, senza ruoli tra parentesi
+        updateUserUI();
+      }
+
+      renderRoleSwitcherDropdown();
+      alert(`L'utente ${u.name} (${u.email}) è stato retrocesso ad ${roleLabel} con successo.`);
+      renderAdminDashboard();
+    }
+  </script>
+</body>
+</html>
