@@ -134,7 +134,3 @@ realestate-portal/
    * Il layer cartografico Leaflet è integrato con il token Mapbox personale valido:
      `pk.eyJ1IjoibG9yZW56b2Jhc2lsZTAwNCIsImEiOiJjbXdjMmxhMGcwMHJ0MnpzODZzeWVtbTJlIn0.Kpba4zbJuQanvkO4UjJRiQ`.
    * La mappa supporta zoom, trascinamento, centratura dinamica sui marker delle coordinate dell'annuncio e selezione visiva della posizione nel form di creazione.
-5. **Esecuzione in IntelliJ IDEA**:
-   * Tutte le librerie Maven necessarie sono collegate al modulo `realestate-portal-backend` in `.idea/libraries/`.
-   * Per avviare il backend selezionare **`RealEstateApplication (Spring Boot)`** o **`Backend (Java Application)`**.
-   * Per avviare il frontend selezionare la run configuration **`Frontend (Angular)`** (oppure `npm start` da terminale). Non cliccare con tasto destro "Run" sui singoli file `.ts` poiché Node.js nativo non supporta file TypeScript non compilati.
