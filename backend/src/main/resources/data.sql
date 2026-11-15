@@ -1,9 +1,4 @@
--- ==============================================================================
--- Dati Iniziali
--- ==============================================================================
-
--- 1. UTENTI
--- Amministratore (requisito: esiste già un utente amministratore nel db)
+-- Amministratore 
 INSERT INTO users (id, email, password, first_name, last_name, phone, role, is_banned, created_at)
 VALUES (1, 'superadmin@realestate.it', 'admin123', 'Lorenzo', 'Direttore', '+39 06 12345678', 'ADMIN', false, CURRENT_TIMESTAMP);
 
@@ -20,7 +15,7 @@ VALUES (4, 'gennaro.guarino@email.it', 'buyer123', 'Gennaro', 'Guarino', '+39 32
 
 ALTER SEQUENCE users_id_seq RESTART WITH 10;
 
--- 2. CATEGORIE
+-- CATEGORIE
 INSERT INTO categories (id, name, description, icon) VALUES
 (1, 'Appartamenti', 'Appartamenti residenziali, monolocali, bilocali e plurilocali in centro o periferia', 'bi-building'),
 (2, 'Ville', 'Ville indipendenti con giardino privato, piscina e ampi spazi vivibili', 'bi-house-heart'),
@@ -30,8 +25,7 @@ INSERT INTO categories (id, name, description, icon) VALUES
 
 ALTER SEQUENCE categories_id_seq RESTART WITH 10;
 
--- 3. IMMOBILI (ANNUNCI)
--- Annuncio 1: Appartamento Vendita a Roma con RIBASSO PREZZO (prezzo barrato: 320.000 -> 289.000)
+-- IMMOBILI
 INSERT INTO properties (id, seller_id, category_id, title, description, transaction_type, original_price, current_price, has_price_drop, square_meters, rooms, bathrooms, address, city, latitude, longitude, main_image_url, created_at, updated_at)
 VALUES (
     1, 2, 1,
@@ -48,7 +42,7 @@ VALUES (
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
--- Annuncio 2: Villa Indipendente Vendita a Firenze con ASTA ATTIVA
+
 INSERT INTO properties (id, seller_id, category_id, title, description, transaction_type, original_price, current_price, has_price_drop, square_meters, rooms, bathrooms, address, city, latitude, longitude, main_image_url, created_at, updated_at)
 VALUES (
     2, 2, 2,
@@ -65,7 +59,7 @@ VALUES (
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
--- Annuncio 3: Appartamento in Affitto a Milano
+
 INSERT INTO properties (id, seller_id, category_id, title, description, transaction_type, original_price, current_price, has_price_drop, square_meters, rooms, bathrooms, address, city, latitude, longitude, main_image_url, created_at, updated_at)
 VALUES (
     3, 2, 1,
@@ -82,7 +76,7 @@ VALUES (
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
--- Annuncio 4: Box Auto Vendita a Torino
+
 INSERT INTO properties (id, seller_id, category_id, title, description, transaction_type, original_price, current_price, has_price_drop, square_meters, rooms, bathrooms, address, city, latitude, longitude, main_image_url, created_at, updated_at)
 VALUES (
     4, 3, 3,
@@ -99,7 +93,7 @@ VALUES (
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
--- Annuncio 5: Terreno Edificabile a Bologna
+
 INSERT INTO properties (id, seller_id, category_id, title, description, transaction_type, original_price, current_price, has_price_drop, square_meters, rooms, bathrooms, address, city, latitude, longitude, main_image_url, created_at, updated_at)
 VALUES (
     5, 3, 4,
@@ -116,7 +110,7 @@ VALUES (
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
--- Annuncio 6: Attico in Affitto a Roma
+
 INSERT INTO properties (id, seller_id, category_id, title, description, transaction_type, original_price, current_price, has_price_drop, square_meters, rooms, bathrooms, address, city, latitude, longitude, main_image_url, created_at, updated_at)
 VALUES (
     6, 3, 1,
@@ -133,7 +127,7 @@ VALUES (
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
--- Annuncio 7: Villa in Affitto a Firenze
+
 INSERT INTO properties (id, seller_id, category_id, title, description, transaction_type, original_price, current_price, has_price_drop, square_meters, rooms, bathrooms, address, city, latitude, longitude, main_image_url, created_at, updated_at)
 VALUES (
     7, 2, 2,
@@ -150,7 +144,7 @@ VALUES (
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
--- Annuncio 8: Box Auto in Affitto a Milano
+
 INSERT INTO properties (id, seller_id, category_id, title, description, transaction_type, original_price, current_price, has_price_drop, square_meters, rooms, bathrooms, address, city, latitude, longitude, main_image_url, created_at, updated_at)
 VALUES (
     8, 3, 3,
@@ -167,7 +161,7 @@ VALUES (
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
--- Annuncio 9: Bilocale in Affitto a Bologna
+
 INSERT INTO properties (id, seller_id, category_id, title, description, transaction_type, original_price, current_price, has_price_drop, square_meters, rooms, bathrooms, address, city, latitude, longitude, main_image_url, created_at, updated_at)
 VALUES (
     9, 2, 1,
@@ -184,7 +178,7 @@ VALUES (
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
--- Annuncio 10: Trilocale in Vendita a Cosenza
+
 INSERT INTO properties (id, seller_id, category_id, title, description, transaction_type, original_price, current_price, has_price_drop, square_meters, rooms, bathrooms, address, city, latitude, longitude, main_image_url, created_at, updated_at)
 VALUES (
     10, 2, 1,
@@ -201,7 +195,7 @@ VALUES (
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
--- Annuncio 11: Quadrilocale in Affitto a Cosenza
+
 INSERT INTO properties (id, seller_id, category_id, title, description, transaction_type, original_price, current_price, has_price_drop, square_meters, rooms, bathrooms, address, city, latitude, longitude, main_image_url, created_at, updated_at)
 VALUES (
     11, 3, 1,
@@ -220,20 +214,20 @@ VALUES (
 
 ALTER SEQUENCE properties_id_seq RESTART WITH 20;
 
--- 4. GALLERIA IMMAGINI ACCESSORIE
+
 INSERT INTO property_images (property_id, image_url) VALUES
 (1, 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'),
 (1, 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80'),
 (2, 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80'),
 (3, 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80');
 
--- 5. RECENSIONI (da acquirenti che hanno visitato l'immobile)
+-- RECENSIONI
 INSERT INTO reviews (property_id, buyer_id, rating, comment, has_visited, created_at) VALUES
 (1, 4, 5, 'Ho visitato questo trilocale la settimana scorsa con l''agente. La ristrutturazione è impeccabile, i materiali sono ottimi e il terrazzo è ancora più spazioso dal vivo che in foto. Zona tranquilla e silenziosa.', true, CURRENT_TIMESTAMP - INTERVAL '3 days'),
 (1, 4, 4, 'Visita concordata velocemente. L''immobile corrisponde pienamente alla descrizione. Il prezzo scontato lo rende davvero molto competitivo nel quartiere.', true, CURRENT_TIMESTAMP - INTERVAL '1 day'),
 (2, 4, 5, 'Villa magnifica, vista panoramica straordinaria sul Duomo di Firenze. Rifiniture signorili.', true, CURRENT_TIMESTAMP - INTERVAL '5 days');
 
--- 6. ASTE ATTIVE
+-- ASTE ATTIVE
 INSERT INTO auctions (id, property_id, starting_price, current_highest_bid, highest_bidder_id, start_date, end_date, is_active, created_at)
 VALUES (
     1, 2, 700000.00, 725000.00, 4,
@@ -244,12 +238,12 @@ VALUES (
 
 ALTER SEQUENCE auctions_id_seq RESTART WITH 10;
 
--- 7. OFFERTE ASTA (Bids)
+-- OFFERTE ASTA 
 INSERT INTO bids (auction_id, buyer_id, bid_amount, bid_time) VALUES
 (1, 4, 710000.00, CURRENT_TIMESTAMP - INTERVAL '1 day 10 hours'),
 (1, 4, 725000.00, CURRENT_TIMESTAMP - INTERVAL '4 hours');
 
--- 8. MESSAGGI DI CONTATTO
+-- MESSAGGI
 INSERT INTO contact_messages (property_id, seller_id, buyer_id, subject, buyer_name, buyer_email, buyer_phone, message, created_at)
 VALUES (
     1, 2, 4,
